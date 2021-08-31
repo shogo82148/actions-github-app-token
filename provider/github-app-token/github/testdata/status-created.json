@@ -1,0 +1,32 @@
+{
+    "url": "https://api.github.com/repos/shogo82148/actions-aws-assume-role/statuses/496f02e29cc5760443becd7007049c1a2a502b6f",
+    "avatar_url": "https://avatars.githubusercontent.com/u/1157344?v=4",
+    "id": 12538509808,
+    "node_id": "MDEzOlN0YXR1c0NvbnRleHQxMjUzODUwOTgwOA==",
+    "state": "success",
+    "description": null,
+    "target_url": null,
+    "context": "actions-aws-assume-role",
+    "created_at": "2021-03-19T13:16:55Z",
+    "updated_at": "2021-03-19T13:16:55Z",
+    "creator": {
+        "login": "shogo82148",
+        "id": 1157344,
+        "node_id": "MDQ6VXNlcjExNTczNDQ=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/1157344?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/shogo82148",
+        "html_url": "https://github.com/shogo82148",
+        "followers_url": "https://api.github.com/users/shogo82148/followers",
+        "following_url": "https://api.github.com/users/shogo82148/following{/other_user}",
+        "gists_url": "https://api.github.com/users/shogo82148/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/shogo82148/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/shogo82148/subscriptions",
+        "organizations_url": "https://api.github.com/users/shogo82148/orgs",
+        "repos_url": "https://api.github.com/users/shogo82148/repos",
+        "events_url": "https://api.github.com/users/shogo82148/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/shogo82148/received_events",
+        "type": "User",
+        "site_admin": false
+    }
+}
