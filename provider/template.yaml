@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: credential provider for actions-github-app-token
+
+Parameters:
+  ApiUrl:
+    Type: String
+    Default: https://api.github.com
+    Description: The URL for GitHub API. You might need to configure it if you use GitHub Enterprise Server.
+
+Resources:
+  ProviderFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: github-app-token/
+      Handler: github-app-token
+      Runtime: provided.al2
+      Tracing: Active
+      Events:
+        CatchAll:
+          Type: HttpApi
+      Environment:
+        Variables:
+          GITHUB_API_URL: !Ref ApiUrl

@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "action",
+		},
+		{
+			"path": "provider/github-app-token",
+		},
+		{
+			"path": "provider",
+		},
+	],
+	"settings": {
+		"editor.formatOnSave": true,
+		"files.exclude": {
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/CVS": true,
+			"**/.DS_Store": true,
+			"github-app-token": true
+		}
+	}
+}
