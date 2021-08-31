@@ -1,0 +1,77 @@
+name: test
+on:
+  push:
+  pull_request:
+
+jobs:
+  provider:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Go 1.17
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17"
+
+      - name: restore cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+      - name: download dependencies
+        run: go mod download
+        working-directory: provider/github-app-token
+
+      - name: Test
+        run: |
+          make test
+        working-directory: provider/github-app-token
+
+  action:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Go 1.17
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17"
+
+      - name: restore cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+
+      - name: download dependencies
+        run: go mod download
+        working-directory: provider/github-app-token
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "12"
+          cache: "npm"
+          cache-dependency-path: action/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+        working-directory: action
+
+      - name: Test
+        run: |
+          npm run test
+        working-directory: action
