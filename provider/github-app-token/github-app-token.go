@@ -61,6 +61,11 @@ func (err *validationError) Error() string {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		h.handleMethodNotAllowed(w)
+		return
+	}
+
 	ctx := r.Context()
 
 	data, err := io.ReadAll(r.Body)
@@ -126,6 +131,20 @@ func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, err error)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 	w.WriteHeader(status)
+	w.Write(data)
+}
+
+func (h *Handler) handleMethodNotAllowed(w http.ResponseWriter) {
+	body := &errorResponseBody{
+		Message: "Method Not Allowed",
+	}
+	data, err := json.Marshal(body)
+	if err != nil {
+		panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	w.WriteHeader(http.StatusMethodNotAllowed)
 	w.Write(data)
 }
 
