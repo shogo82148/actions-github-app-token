@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "github-app-token"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1f2z7dd66gmx0"
+s3_prefix = "github-app-token"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "ApiUrl=\"https://api.github.com\""
