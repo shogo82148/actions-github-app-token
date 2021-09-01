@@ -10,11 +10,16 @@ import (
 )
 
 type githubClientMock struct {
-	CreateStatusFunc func(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
+	CreateStatusFunc   func(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
+	ValidateAPIURLFunc func(url string) error
 }
 
 func (c *githubClientMock) CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {
 	return c.CreateStatusFunc(ctx, token, owner, repo, ref, status)
+}
+
+func (c *githubClientMock) ValidateAPIURL(url string) error {
+	return c.ValidateAPIURLFunc(url)
 }
 
 func TestValidateGitHubToken(t *testing.T) {
@@ -46,6 +51,9 @@ func TestValidateGitHubToken(t *testing.T) {
 						Type:  creatorType,
 					},
 				}, nil
+			},
+			ValidateAPIURLFunc: func(url string) error {
+				return nil
 			},
 		},
 	}
@@ -95,6 +103,9 @@ func TestValidateGitHubToken_InvalidCreator(t *testing.T) {
 						Type:  "User",
 					},
 				}, nil
+			},
+			ValidateAPIURLFunc: func(url string) error {
+				return nil
 			},
 		},
 	}

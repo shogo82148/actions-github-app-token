@@ -16,6 +16,7 @@ import (
 
 type githubClient interface {
 	CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
+	ValidateAPIURL(url string) error
 }
 
 const (
@@ -88,6 +89,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, error) {
+	if err := h.github.ValidateAPIURL(req.APIURL); err != nil {
+		return nil, err
+	}
 	if err := h.validateGitHubToken(ctx, req); err != nil {
 		return nil, err
 	}
