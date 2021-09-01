@@ -1,6 +1,7 @@
 package github
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	githubUserAgent   = "actions-aws-assume-role/1.0"
+	githubUserAgent   = "actions-github-token/1.0"
 	defaultAPIBaseURL = "https://api.github.com"
 )
 
@@ -43,6 +44,24 @@ func NewClient(httpClient *http.Client) *Client {
 		baseURL:    apiBaseURL,
 		httpClient: httpClient,
 	}
+}
+
+func (c *Client) ValidateAPIURL(url string) error {
+	u, err := canonicalURL(url)
+	if err != nil {
+		return err
+	}
+	if u != c.baseURL {
+		if c.baseURL == defaultAPIBaseURL {
+			return errors.New(
+				"it looks that you use GitHub Enterprise Server, " +
+					"but the credential provider doesn't support it. " +
+					"I recommend you to build your own credential provider",
+			)
+		}
+		return errors.New("your api server is not verified by the credential provider")
+	}
+	return nil
 }
 
 type UnexpectedStatusCodeError struct {
