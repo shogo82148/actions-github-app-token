@@ -52,8 +52,13 @@ describe('tests', () => {
   afterAll(async () => {
     console.log('killing dummy server');
     subprocess?.kill('SIGTERM');
-    await sleep(1); // wait for stopping process
-    await io.rmRF(tmpdir);
+    try {
+      await sleep(1); // wait for stopping process
+      await io.rmRF(tmpdir);
+    } catch (error) {
+      // suppress the error
+      core.info(`[warning]: ${error}`);
+    }
   });
 
   it('succeed', async () => {
