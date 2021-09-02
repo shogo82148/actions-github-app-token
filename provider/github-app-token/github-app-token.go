@@ -44,8 +44,9 @@ type requestBody struct {
 }
 
 type responseBody struct {
-	Message string `json:"message,omitempty"`
-	Warning string `json:"warning,omitempty"`
+	GitHubToken string `json:"github_token"`
+	Message     string `json:"message,omitempty"`
+	Warning     string `json:"warning,omitempty"`
 }
 
 type errorResponseBody struct {
@@ -103,7 +104,9 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 
 	// TODO: implement me
 
-	return &responseBody{}, nil
+	return &responseBody{
+		GitHubToken: "FIXME!!!",
+	}, nil
 }
 
 func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, err error) {
