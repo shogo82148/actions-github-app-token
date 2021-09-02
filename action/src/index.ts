@@ -106,7 +106,7 @@ async function run() {
     };
     const githubToken = core.getInput('github-token', required);
     const providerEndpoint =
-      core.getInput('provider-endpoint') || 'https://uw4qs7ndjj.execute-api.us-east-1.amazonaws.com/assume-role';
+      core.getInput('provider-endpoint') || 'https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/';
     await assumeRole({
       githubToken,
       providerEndpoint
