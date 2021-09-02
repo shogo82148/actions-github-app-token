@@ -2,13 +2,26 @@ import * as os from 'os';
 import {promises as fs} from 'fs';
 import * as path from 'path';
 import * as child_process from 'child_process';
+import * as core from '@actions/core';
 import * as io from '@actions/io';
 import * as exec from '@actions/exec';
+import * as index from '../src/index';
+
+// The environment values defined in the GitHub Actions Environment
+// https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+process.env.GITHUB_REPOSITORY = 'shogo82148/actions-aws-assume-role';
+process.env.GITHUB_WORKFLOW = 'test';
+process.env.GITHUB_RUN_ID = '1234567890';
+process.env.GITHUB_ACTOR = 'shogo82148';
+process.env.GITHUB_SHA = 'e3a45c6c16c1464826b36a598ff39e6cc98c4da4';
+process.env.GITHUB_REF = 'ref/heads/main';
 
 const sep = path.sep;
 
 // extension of executable files
 const binExt = os.platform() === 'win32' ? '.exe' : '';
+
+jest.mock('@actions/core');
 
 describe('tests', () => {
   let tmpdir = '';
@@ -43,7 +56,13 @@ describe('tests', () => {
     await io.rmRF(tmpdir);
   });
 
-  it('invalid GitHub Token', async () => {});
+  it('succeed', async () => {
+    await index.assumeRole({
+      githubToken: 'ghs_dummyGitHubToken',
+      providerEndpoint: 'http://localhost:8080'
+    });
+    expect(core.setSecret).toHaveBeenCalledWith('');
+  });
 });
 
 function sleep(waitSec: number): Promise<void> {
