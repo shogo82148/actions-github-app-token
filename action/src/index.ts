@@ -10,6 +10,7 @@ interface GetTokenPayload {
   github_token: string;
   api_url: string;
   repository: string;
+  sha: string;
 }
 
 interface GetTokenResult {
@@ -67,15 +68,17 @@ function assertIsDefined<T>(val: T): asserts val is NonNullable<T> {
 }
 
 export async function assumeRole(params: GetTokenParams) {
-  const {GITHUB_REPOSITORY} = process.env;
+  const {GITHUB_REPOSITORY, GITHUB_SHA} = process.env;
   assertIsDefined(GITHUB_REPOSITORY);
+  assertIsDefined(GITHUB_SHA);
   validateGitHubToken(params.githubToken);
   const GITHUB_API_URL = process.env['GITHUB_API_URL'] || 'https://api.github.com';
 
   const payload: GetTokenPayload = {
     github_token: params.githubToken,
     api_url: GITHUB_API_URL,
-    repository: GITHUB_REPOSITORY
+    repository: GITHUB_REPOSITORY,
+    sha: GITHUB_SHA
   };
   const client = new http.HttpClient('actions-github-app-token');
   const result = await client.postJson<GetTokenResult | GetTokenError>(params.providerEndpoint, payload);
