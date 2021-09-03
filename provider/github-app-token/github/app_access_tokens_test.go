@@ -2,15 +2,33 @@ package github
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func TestCreateAppAccessToken(t *testing.T) {
 	privateKey, err := os.ReadFile("./testdata/id_rsa_for_testing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	block, _ := pem.Decode(privateKey)
+	if block == nil {
+		t.Fatal("no key found")
+	}
+	if block.Type != "RSA PRIVATE KEY" {
+		t.Fatalf("unsupported key type: %q", block.Type)
+	}
+
+	rsaPrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,6 +37,31 @@ func TestCreateAppAccessToken(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("unexpected method: want POST, got %s", r.Method)
 		}
+
+		auth := r.Header.Get("Authorization")
+		if !strings.HasPrefix(auth, "Bearer ") {
+			t.Errorf("unexpected Authorization header: %q", auth)
+			rw.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		auth = strings.TrimPrefix(auth, "Bearer ")
+		token, err := jwt.Parse(auth, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return &rsaPrivateKey.PublicKey, nil
+		})
+		if err != nil {
+			t.Error(err)
+			rw.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		claims := token.Claims.(jwt.MapClaims)
+		iss := claims["iss"].(string)
+		if iss != "123456" {
+			t.Errorf("unexpected issuer: want %q, got %q", "123456", iss)
+		}
+
 		path := "/app/installations/123456789/access_tokens"
 		if r.URL.Path != path {
 			t.Errorf("unexpected path: want %q, got %q", path, r.URL.Path)
