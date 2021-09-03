@@ -1,6 +1,9 @@
 package github
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"net"
@@ -8,6 +11,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 const (
@@ -32,18 +38,59 @@ func init() {
 
 // Client is a very light weight GitHub API Client.
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL       string
+	httpClient    *http.Client
+	appID         string
+	rsaPrivateKey *rsa.PrivateKey
 }
 
-func NewClient(httpClient *http.Client) *Client {
+func NewClient(httpClient *http.Client, appID string, privateKey []byte) (*Client, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
-	return &Client{
+	c := &Client{
 		baseURL:    apiBaseURL,
 		httpClient: httpClient,
+		appID:      appID,
 	}
+
+	if privateKey != nil {
+		key, err := decodePrivateKey(privateKey)
+		if err != nil {
+			return nil, err
+		}
+		c.rsaPrivateKey = key
+	}
+
+	return c, nil
+}
+
+func decodePrivateKey(privateKey []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(privateKey)
+	if block == nil {
+		return nil, errors.New("github: no key found")
+	}
+	if block.Type != "RSA PRIVATE KEY" {
+		return nil, fmt.Errorf("github: unsupported key type %q", block.Type)
+	}
+
+	return x509.ParsePKCS1PrivateKey(block.Bytes)
+}
+
+// generate JSON Web Token for authentication the app
+// https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
+func (c *Client) generateJWT() (string, error) {
+	now := time.Now()
+	unix := now.Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		// issued at time, 60 seconds in the past to allow for clock drift
+		"iat": unix - 60,
+		// JWT expiration time (10 minute maximum)
+		"exp": unix + (10 * 60),
+		// GitHub App's identifier
+		"iss": c.appID,
+	})
+	return token.SignedString(c.rsaPrivateKey)
 }
 
 func (c *Client) ValidateAPIURL(url string) error {
