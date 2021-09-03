@@ -98,8 +98,8 @@ export async function assumeRole(params: GetTokenParams) {
   }
 
   core.setSecret(resp.github_token);
-  core.setOutput('github-token', resp.github_token);
-  core.saveState('github-token', resp.github_token);
+  core.setOutput('token', resp.github_token);
+  core.saveState('token', resp.github_token);
 }
 
 async function run() {
