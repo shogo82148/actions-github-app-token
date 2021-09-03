@@ -15,7 +15,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func TestCreateAppAccessToken(t *testing.T) {
+func TestGetReposInstallation(t *testing.T) {
 	privateKey, err := os.ReadFile("./testdata/id_rsa_for_testing")
 	if err != nil {
 		t.Fatal(err)
@@ -34,8 +34,8 @@ func TestCreateAppAccessToken(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("unexpected method: want POST, got %s", r.Method)
+		if r.Method != http.MethodGet {
+			t.Errorf("unexpected method: want GET, got %s", r.Method)
 		}
 
 		auth := r.Header.Get("Authorization")
@@ -62,18 +62,18 @@ func TestCreateAppAccessToken(t *testing.T) {
 			t.Errorf("unexpected issuer: want %q, got %q", "123456", iss)
 		}
 
-		path := "/app/installations/123456789/access_tokens"
+		path := "/repos/shogo82148/actions-github-app-token/installation"
 		if r.URL.Path != path {
 			t.Errorf("unexpected path: want %q, got %q", path, r.URL.Path)
 		}
 
-		data, err := os.ReadFile("testdata/access-tokens.json")
+		data, err := os.ReadFile("testdata/repos-installation.json")
 		if err != nil {
 			panic(err)
 		}
 		rw.Header().Set("Content-Type", "application/json")
 		rw.Header().Set("Content-Length", strconv.Itoa(len(data)))
-		rw.WriteHeader(http.StatusCreated)
+		rw.WriteHeader(http.StatusOK)
 		rw.Write(data)
 	}))
 	defer ts.Close()
@@ -84,17 +84,11 @@ func TestCreateAppAccessToken(t *testing.T) {
 	}
 	c.baseURL = ts.URL
 
-	resp, err := c.CreateAppAccessToken(context.Background(), 123456789, &CreateAppAccessTokenRequest{
-		Repositories: []string{"repositories"},
-		Permissions: &CreateAppAccessTokenRequestPermissions{
-			Contents: "read",
-		},
-	})
+	resp, err := c.GetReposInstallation(context.Background(), "shogo82148", "actions-github-app-token")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if resp.Token != "ghs_dummyGitHubToken" {
-		t.Errorf("unexpected access token: want %q, got %q", "ghs_dummyGitHubToken", resp.Token)
+	if resp.ID != 13865879 {
+		t.Errorf("unexpected installation id: want %d, got %d", 13865879, resp.ID)
 	}
 }
