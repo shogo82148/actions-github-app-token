@@ -152,7 +152,7 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
 	token, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
-		Repositories: []string{owner + "/" + repo},
+		Repositories: []string{repo},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed create access token: %w", err)
