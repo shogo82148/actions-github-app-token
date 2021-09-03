@@ -7,6 +7,14 @@ Parameters:
     Type: String
     Default: https://api.github.com
     Description: The URL for GitHub API. You might need to configure it if you use GitHub Enterprise Server.
+  AppId:
+    Type: AWS::SSM::Parameter::Name
+    Default: /github-app-token/app-id
+    Description: A Systems Manager parameter whose value is the app id.
+  PrivateKey:
+    Type: AWS::SSM::Parameter::Name
+    Default: /github-app-token/private-key
+    Description: A Systems Manager parameter whose value is the private key.
 
 Resources:
   ProviderFunction:
@@ -24,3 +32,11 @@ Resources:
       Environment:
         Variables:
           GITHUB_API_URL: !Ref ApiUrl
+          GITHUB_APP_ID: !Ref AppId
+          GITHUB_PRIVATE_KEY: !Ref PrivateKey
+      Policies:
+        - SSMParameterReadPolicy:
+            # HACK: trim "/" prefix. See https://github.com/aws/serverless-application-model/issues/1112
+            ParameterName: !Join ["", !Split ["^/", !Sub "^${AppId}"]]
+        - SSMParameterReadPolicy:
+            ParameterName: !Join ["", !Split ["^/", !Sub "^${PrivateKey}"]]
