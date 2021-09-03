@@ -20,6 +20,8 @@ import (
 
 type githubClient interface {
 	CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
+	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
+	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
 }
 
@@ -139,10 +141,23 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 		return nil, err
 	}
 
-	// TODO: implement me
+	owner, repo, err := splitOwnerRepo(req.Repository)
+	if err != nil {
+		return nil, err
+	}
+	inst, err := h.github.GetReposInstallation(ctx, owner, repo)
+	if err != nil {
+		return nil, err
+	}
+	token, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
+		Repositories: []string{owner + "/" + repo},
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &responseBody{
-		GitHubToken: "FIXME!!!",
+		GitHubToken: token.Token,
 	}, nil
 }
 

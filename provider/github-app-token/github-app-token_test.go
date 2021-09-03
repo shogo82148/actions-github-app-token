@@ -10,12 +10,22 @@ import (
 )
 
 type githubClientMock struct {
-	CreateStatusFunc   func(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
-	ValidateAPIURLFunc func(url string) error
+	CreateStatusFunc         func(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
+	GetReposInstallationFunc func(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
+	CreateAppAccessTokenFunc func(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
+	ValidateAPIURLFunc       func(url string) error
 }
 
 func (c *githubClientMock) CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {
 	return c.CreateStatusFunc(ctx, token, owner, repo, ref, status)
+}
+
+func (c *githubClientMock) GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error) {
+	return c.GetReposInstallationFunc(ctx, owner, repo)
+}
+
+func (c *githubClientMock) CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error) {
+	return c.CreateAppAccessTokenFunc(ctx, installationID, permissions)
 }
 
 func (c *githubClientMock) ValidateAPIURL(url string) error {
