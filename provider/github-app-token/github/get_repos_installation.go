@@ -40,7 +40,7 @@ func (c *Client) GetReposInstallation(ctx context.Context, owner, repo string) (
 
 	// parse the response
 	if resp.StatusCode != http.StatusOK {
-		return nil, &UnexpectedStatusCodeError{StatusCode: resp.StatusCode}
+		return nil, newErrUnexpectedStatusCode(resp)
 	}
 
 	var ret *GetReposInstallationResponse

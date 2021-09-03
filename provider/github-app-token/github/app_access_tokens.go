@@ -68,7 +68,7 @@ func (c *Client) CreateAppAccessToken(ctx context.Context, installationID uint64
 
 	// parse the response
 	if resp.StatusCode != http.StatusCreated {
-		return nil, &UnexpectedStatusCodeError{StatusCode: resp.StatusCode}
+		return nil, newErrUnexpectedStatusCode(resp)
 	}
 
 	var ret *CreateAppAccessTokenResponse
