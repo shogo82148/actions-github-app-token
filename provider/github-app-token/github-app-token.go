@@ -8,9 +8,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 )
 
@@ -31,7 +35,36 @@ type Handler struct {
 }
 
 func NewHandler() (*Handler, error) {
-	c, err := github.NewClient(nil, 0, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	svc := ssm.NewFromConfig(cfg)
+
+	appIDParam, err := svc.GetParameter(ctx, &ssm.GetParameterInput{
+		Name: aws.String(os.Getenv("GITHUB_APP_ID")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	appID, err := strconv.ParseUint(aws.ToString(appIDParam.Parameter.Value), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	privateKeyParam, err := svc.GetParameter(ctx, &ssm.GetParameterInput{
+		Name:           aws.String(os.Getenv("GITHUB_PRIVATE_KEY")),
+		WithDecryption: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	privateKey := []byte(aws.ToString(privateKeyParam.Parameter.Value))
+
+	c, err := github.NewClient(nil, appID, privateKey)
 	if err != nil {
 		return nil, err
 	}
