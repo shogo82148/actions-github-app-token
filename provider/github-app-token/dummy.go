@@ -22,6 +22,18 @@ func (c *githubClientDummy) CreateStatus(ctx context.Context, token, owner, repo
 	}, nil
 }
 
+func (c *githubClientDummy) GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error) {
+	return &github.GetReposInstallationResponse{
+		ID: 123456,
+	}, nil
+}
+
+func (c *githubClientDummy) CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error) {
+	return &github.CreateAppAccessTokenResponse{
+		Token: "ghs_dummyGitHubToken",
+	}, nil
+}
+
 func (c *githubClientDummy) ValidateAPIURL(url string) error {
 	return nil
 }

@@ -66,7 +66,7 @@ describe('tests', () => {
       githubToken: 'ghs_dummyGitHubToken',
       providerEndpoint: 'http://localhost:8080'
     });
-    expect(core.setSecret).toHaveBeenCalledWith('FIXME!!!');
+    expect(core.setSecret).toHaveBeenCalledWith('ghs_dummyGitHubToken');
   });
 });
 
