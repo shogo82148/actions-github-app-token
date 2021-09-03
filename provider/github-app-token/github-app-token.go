@@ -135,7 +135,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, error) {
 	if err := h.github.ValidateAPIURL(req.APIURL); err != nil {
-		return nil, err
+		return nil, &validationError{
+			message: err.Error(),
+		}
 	}
 	if err := h.validateGitHubToken(ctx, req); err != nil {
 		return nil, err
@@ -147,13 +149,13 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 	}
 	inst, err := h.github.GetReposInstallation(ctx, owner, repo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
 	token, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
 		Repositories: []string{owner + "/" + repo},
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed create access token: %w", err)
 	}
 
 	return &responseBody{
@@ -247,7 +249,7 @@ func (h *Handler) validateGitHubToken(ctx context.Context, req *requestBody) err
 		Context:     commitStatusContext,
 	})
 	if err != nil {
-		var githubErr *github.UnexpectedStatusCodeError
+		var githubErr *github.ErrUnexpectedStatusCode
 		if errors.As(err, &githubErr) {
 			if 400 <= githubErr.StatusCode && githubErr.StatusCode < 500 {
 				return &validationError{
