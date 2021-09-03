@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -40,11 +41,11 @@ func init() {
 type Client struct {
 	baseURL       string
 	httpClient    *http.Client
-	appID         string
+	appID         uint64
 	rsaPrivateKey *rsa.PrivateKey
 }
 
-func NewClient(httpClient *http.Client, appID string, privateKey []byte) (*Client, error) {
+func NewClient(httpClient *http.Client, appID uint64, privateKey []byte) (*Client, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -88,7 +89,7 @@ func (c *Client) generateJWT() (string, error) {
 		// JWT expiration time (10 minute maximum)
 		"exp": unix + (10 * 60),
 		// GitHub App's identifier
-		"iss": c.appID,
+		"iss": strconv.FormatUint(c.appID, 10),
 	})
 	return token.SignedString(c.rsaPrivateKey)
 }

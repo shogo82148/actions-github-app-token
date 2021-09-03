@@ -39,14 +39,14 @@ type CreateAppAccessTokenResponse struct {
 
 // CreateAppAccessToken creates an installation access token for the app
 // https://docs.github.com/en/rest/reference/apps#create-an-installation-access-token-for-an-app
-func (c *Client) CreateAppAccessToken(ctx context.Context, installationID string, permissions *CreateAppAccessTokenRequest) (*CreateAppAccessTokenResponse, error) {
+func (c *Client) CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *CreateAppAccessTokenRequest) (*CreateAppAccessTokenResponse, error) {
 	token, err := c.generateJWT()
 	if err != nil {
 		return nil, err
 	}
 
 	// build the request
-	u := fmt.Sprintf("%s/app/installations/%s/access_tokens", c.baseURL, installationID)
+	u := fmt.Sprintf("%s/app/installations/%d/access_tokens", c.baseURL, installationID)
 	body, err := json.Marshal(permissions)
 	if err != nil {
 		return nil, err

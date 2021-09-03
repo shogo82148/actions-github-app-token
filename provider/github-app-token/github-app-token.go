@@ -31,7 +31,7 @@ type Handler struct {
 }
 
 func NewHandler() (*Handler, error) {
-	c, err := github.NewClient(nil, "", nil)
+	c, err := github.NewClient(nil, 0, nil)
 	if err != nil {
 		return nil, err
 	}

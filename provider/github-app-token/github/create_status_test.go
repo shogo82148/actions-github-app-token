@@ -29,7 +29,7 @@ func TestCreateStatus(t *testing.T) {
 		rw.Write(data)
 	}))
 	defer ts.Close()
-	c, err := NewClient(nil, "", nil)
+	c, err := NewClient(nil, 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
