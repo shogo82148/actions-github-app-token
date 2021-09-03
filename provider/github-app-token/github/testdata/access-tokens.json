@@ -1,0 +1,10 @@
+{
+    "token": "ghs_dummyGitHubToken",
+    "expires_at": "2021-09-03T13:53:17Z",
+    "permissions": {
+        "contents": "write",
+        "metadata": "read",
+        "pull_requests": "write"
+    },
+    "repository_selection": "all"
+}

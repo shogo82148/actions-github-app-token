@@ -30,10 +30,14 @@ type Handler struct {
 	github githubClient
 }
 
-func NewHandler() *Handler {
-	return &Handler{
-		github: github.NewClient(nil),
+func NewHandler() (*Handler, error) {
+	c, err := github.NewClient(nil, "", nil)
+	if err != nil {
+		return nil, err
 	}
+	return &Handler{
+		github: c,
+	}, nil
 }
 
 type requestBody struct {
