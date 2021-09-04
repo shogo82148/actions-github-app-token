@@ -8,6 +8,9 @@ async function cleanup() {
     const apiUrl = process.env['GITHUB_API_URL'] || 'https://api.github.com';
     const client = new http.HttpClient('actions-github-app-token');
     const token = core.getState('token');
+    if (!token) {
+      return;
+    }
     const resp = await client.del(`${apiUrl}/installation/token`, {
       Authorization: `token ${token}`,
       Accept: 'application/vnd.github.v3+json'

@@ -16,6 +16,7 @@ runs:
   using: "node12"
   main: "action/lib/index.js"
   post: "action/lib/cleanup.js"
+  post-if: always()
 branding:
   icon: "unlock"
   color: "blue"
