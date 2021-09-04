@@ -11,7 +11,7 @@ type githubClientDummy struct{}
 
 func (c *githubClientDummy) CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {
 	if token != "ghs_dummyGitHubToken" || owner != "shogo82148" || repo != "actions-aws-assume-role" || ref != "e3a45c6c16c1464826b36a598ff39e6cc98c4da4" {
-		return nil, &github.UnexpectedStatusCodeError{StatusCode: http.StatusBadRequest}
+		return nil, &github.ErrUnexpectedStatusCode{StatusCode: http.StatusBadRequest}
 	}
 	return &github.CreateStatusResponse{
 		Creator: &github.CreateStatusResponseCreator{

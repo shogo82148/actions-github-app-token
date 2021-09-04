@@ -81,7 +81,7 @@ func TestValidateGitHubToken_PermissionError(t *testing.T) {
 	h := &Handler{
 		github: &githubClientMock{
 			CreateStatusFunc: func(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {
-				return nil, &github.UnexpectedStatusCodeError{
+				return nil, &github.ErrUnexpectedStatusCode{
 					StatusCode: http.StatusBadRequest,
 				}
 			},

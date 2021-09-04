@@ -3,6 +3,7 @@ package github
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -112,12 +113,44 @@ func (c *Client) ValidateAPIURL(url string) error {
 	return nil
 }
 
-type UnexpectedStatusCodeError struct {
-	StatusCode int
+type ErrUnexpectedStatusCode struct {
+	StatusCode       int
+	Message          string
+	DocumentationURL string
 }
 
-func (err *UnexpectedStatusCodeError) Error() string {
-	return fmt.Sprintf("unexpected status code: %d", err.StatusCode)
+func (err *ErrUnexpectedStatusCode) Error() string {
+	var buf strings.Builder
+	buf.WriteString("unexpected status code: ")
+	buf.WriteString(strconv.Itoa(err.StatusCode))
+	if err.Message != "" {
+		buf.WriteString(", message: ")
+		buf.WriteString(err.Message)
+	}
+	if err.DocumentationURL != "" {
+		buf.WriteString(", documentation_url: ")
+		buf.WriteString(err.DocumentationURL)
+	}
+	return buf.String()
+}
+
+func newErrUnexpectedStatusCode(resp *http.Response) *ErrUnexpectedStatusCode {
+	var data struct {
+		Message          string `json:"message"`
+		DocumentationURL string `json:"documentation_url"`
+	}
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&data); err != nil {
+		return &ErrUnexpectedStatusCode{
+			StatusCode: resp.StatusCode,
+			Message:    err.Error(),
+		}
+	}
+	return &ErrUnexpectedStatusCode{
+		StatusCode:       resp.StatusCode,
+		Message:          data.Message,
+		DocumentationURL: data.DocumentationURL,
+	}
 }
 
 func canonicalURL(rawurl string) (string, error) {
