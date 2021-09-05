@@ -149,6 +149,14 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 	}
 	inst, err := h.github.GetReposInstallation(ctx, owner, repo)
 	if err != nil {
+		var ghErr *github.ErrUnexpectedStatusCode
+		if errors.As(err, &ghErr) && ghErr.StatusCode == http.StatusNotFound {
+			// installation not found.
+			// the user may not install the app.
+			return nil, &validationError{
+				message: "Installation not found. You need to install the GitHub App to use the action.",
+			}
+		}
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
 	token, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
