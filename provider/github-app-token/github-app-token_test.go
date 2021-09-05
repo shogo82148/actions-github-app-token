@@ -10,10 +10,15 @@ import (
 )
 
 type githubClientMock struct {
+	GetAppFunc               func(ctx context.Context) (*github.GetAppResponse, error)
 	CreateStatusFunc         func(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
 	GetReposInstallationFunc func(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
 	CreateAppAccessTokenFunc func(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURLFunc       func(url string) error
+}
+
+func (c *githubClientMock) GetApp(ctx context.Context) (*github.GetAppResponse, error) {
+	return c.GetAppFunc(ctx)
 }
 
 func (c *githubClientMock) CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {

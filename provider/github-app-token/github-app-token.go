@@ -19,6 +19,7 @@ import (
 )
 
 type githubClient interface {
+	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
@@ -34,6 +35,7 @@ const (
 
 type Handler struct {
 	github githubClient
+	app    *github.GetAppResponse
 }
 
 func NewHandler() (*Handler, error) {
@@ -70,8 +72,15 @@ func NewHandler() (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	app, err := c.GetApp(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the app information, check your configure: %w", err)
+	}
+
 	return &Handler{
 		github: c,
+		app:    app,
 	}, nil
 }
 
@@ -154,7 +163,12 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 			// installation not found.
 			// the user may not install the app.
 			return nil, &validationError{
-				message: "Installation not found. You need to install the GitHub App to use the action.",
+				message: fmt.Sprintf(
+					"Installation not found. "+
+						"You need to install the GitHub App to use the action. "+
+						"See %s for more detail",
+					h.app.HTMLURL,
+				),
 			}
 		}
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
