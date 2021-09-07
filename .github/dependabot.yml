@@ -7,6 +7,10 @@ updates:
     directory: "/action"
     schedule:
       interval: "daily"
+    ignore:
+      # update too often, ignore patch releases
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-patch"]
   - package-ecosystem: "gomod"
     directory: "/provider/github-app-token"
     schedule:
