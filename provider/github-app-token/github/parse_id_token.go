@@ -33,7 +33,7 @@ type ActionsIDToken struct {
 
 type openIDConfiguration struct {
 	Issuer                           string   `json:"issuer"`
-	JWKsURI                          string   `json:"jwks_uri"`
+	JWKSURI                          string   `json:"jwks_uri"`
 	SubjectTypesSupported            []string `json:"subject_types_supported"`
 	ResponseTypesSupported           []string `json:"response_types_supported"`
 	ClaimsSupported                  []string `json:"claims_supported"`
@@ -81,7 +81,7 @@ func (c *Client) findOIDCKey(ctx context.Context, token *jwt.Token) (interface{}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get open id configuration: %w", err)
 	}
-	keys, err := c.getJWKs(ctx, config.JWKsURI)
+	keys, err := c.getJWKS(ctx, config.JWKSURI)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get jwks: %w", err)
 	}
@@ -103,6 +103,8 @@ func (c *Client) getOpenIDConfiguration(ctx context.Context) (*openIDConfigurati
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", githubUserAgent)
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -123,12 +125,13 @@ func (c *Client) getOpenIDConfiguration(ctx context.Context) (*openIDConfigurati
 	return &config, nil
 }
 
-func (c *Client) getJWKs(ctx context.Context, url string) (map[string]*rsa.PublicKey, error) {
+func (c *Client) getJWKS(ctx context.Context, url string) (map[string]*rsa.PublicKey, error) {
 	// TODO: need to cache?
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", githubUserAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

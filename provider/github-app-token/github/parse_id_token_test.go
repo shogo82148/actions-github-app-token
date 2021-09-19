@@ -19,10 +19,12 @@ func TestParseIDToken_Intergrated(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	t.Logf("the request started at %s", time.Now())
 	token, err := getIdToken(ctx, idToken, idURL)
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("the id is issued at %s", time.Now())
 
 	// The clock of the token vendor is drifted from the GitHub Actions' runners.
 	time.Sleep(5 * time.Second)
