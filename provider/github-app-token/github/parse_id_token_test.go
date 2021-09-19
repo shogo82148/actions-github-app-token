@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestParseIDToken_Intergrated(t *testing.T) {
@@ -23,6 +24,9 @@ func TestParseIDToken_Intergrated(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// The clock of the token vendor is drifted from the GitHub Actions' runners.
+	time.Sleep(5 * time.Second)
+
 	c := &Client{
 		baseURL:    apiBaseURL,
 		httpClient: http.DefaultClient,
@@ -35,6 +39,9 @@ func TestParseIDToken_Intergrated(t *testing.T) {
 	t.Logf("sub: %s", id.Subject)
 	t.Logf("job_workflow_ref: %s", id.JobWorkflowRef)
 	t.Logf("aud: %s", id.Audience)
+	t.Logf("issued at %s", time.Unix(id.IssuedAt, 0))
+	t.Logf("not before %s", time.Unix(id.NotBefore, 0))
+	t.Logf("expires at %s", time.Unix(id.ExpiresAt, 0))
 
 	if got, want := id.Actor, os.Getenv("GITHUB_ACTOR"); got != want {
 		t.Errorf("unexpected actor: want %q, got %q", want, got)
