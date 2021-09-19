@@ -73,11 +73,9 @@ export async function assumeRole(params: GetTokenParams) {
   const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
   assertIsDefined(GITHUB_REPOSITORY);
   assertIsDefined(GITHUB_SHA);
-  validateGitHubToken(params.githubToken);
   const GITHUB_API_URL = process.env["GITHUB_API_URL"] || "https://api.github.com";
 
   const payload: GetTokenPayload = {
-    github_token: params.githubToken,
     api_url: GITHUB_API_URL,
     repository: GITHUB_REPOSITORY,
     sha: GITHUB_SHA,
@@ -85,6 +83,9 @@ export async function assumeRole(params: GetTokenParams) {
 
   if (isIdTokenAvailable()) {
     payload.id_token = await core.getIDToken(params.audience);
+  } else {
+    validateGitHubToken(params.githubToken);
+    payload.github_token = params.githubToken;
   }
 
   const client = new http.HttpClient("actions-github-app-token");

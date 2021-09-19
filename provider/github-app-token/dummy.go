@@ -44,6 +44,10 @@ func (c *githubClientDummy) ValidateAPIURL(url string) error {
 	return nil
 }
 
+func (c *githubClientDummy) ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error) {
+	return &github.ActionsIDToken{}, nil
+}
+
 func NewDummyHandler() *Handler {
 	return &Handler{
 		github: &githubClientDummy{},

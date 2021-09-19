@@ -24,6 +24,7 @@ type githubClient interface {
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
+	ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
 }
 
 const (
@@ -149,8 +150,22 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 			message: err.Error(),
 		}
 	}
-	if err := h.validateGitHubToken(ctx, req); err != nil {
-		return nil, err
+	if req.IDToken != "" {
+		_, err := h.github.ParseIDToken(ctx, req.IDToken)
+		if err != nil {
+			return nil, &validationError{
+				message: "invalid JSON Web Token",
+			}
+		}
+	} else if req.GitHubToken != "" {
+		err := h.validateGitHubToken(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, &validationError{
+			message: "github_token or id_token is required",
+		}
 	}
 
 	owner, repo, err := splitOwnerRepo(req.Repository)
