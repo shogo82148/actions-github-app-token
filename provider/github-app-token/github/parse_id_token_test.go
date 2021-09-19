@@ -30,9 +30,10 @@ func TestParseIDToken_Intergrated(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	c := &Client{
-		baseURL:    apiBaseURL,
-		httpClient: http.DefaultClient,
-		issuer:     "https://vstoken.actions.githubusercontent.com",
+		baseURL:     apiBaseURL,
+		httpClient:  http.DefaultClient,
+		issuer:      oidcIssuer,
+		thumbprints: oidcThumbprints,
 	}
 	id, err := c.ParseIDToken(ctx, token)
 	if err != nil {
