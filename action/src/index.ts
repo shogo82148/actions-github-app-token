@@ -4,10 +4,12 @@ import * as http from "@actions/http-client";
 interface GetTokenParams {
   githubToken: string;
   providerEndpoint: string;
+  audience: string;
 }
 
 interface GetTokenPayload {
-  github_token: string;
+  github_token?: string;
+  id_token?: string;
   api_url: string;
   repository: string;
   sha: string;
@@ -80,6 +82,11 @@ export async function assumeRole(params: GetTokenParams) {
     repository: GITHUB_REPOSITORY,
     sha: GITHUB_SHA,
   };
+
+  if (isIdTokenAvailable()) {
+    payload.id_token = await core.getIDToken(params.audience);
+  }
+
   const client = new http.HttpClient("actions-github-app-token");
   const result = await client.postJson<GetTokenResult | GetTokenError>(params.providerEndpoint, payload);
   if (result.statusCode !== 200) {
@@ -102,6 +109,12 @@ export async function assumeRole(params: GetTokenParams) {
   core.saveState("token", resp.github_token);
 }
 
+function isIdTokenAvailable(): boolean {
+  const token = process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
+  const url = process.env["ACTIONS_ID_TOKEN_REQUEST_URL"];
+  return token && url ? true : false;
+}
+
 async function run() {
   try {
     const required = {
@@ -110,9 +123,12 @@ async function run() {
     const githubToken = core.getInput("github-token", required);
     const providerEndpoint =
       core.getInput("provider-endpoint") || "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
+    const audience = core.getInput("audience", { required: false });
+
     await assumeRole({
       githubToken,
       providerEndpoint,
+      audience,
     });
   } catch (error) {
     if (error instanceof Error) {

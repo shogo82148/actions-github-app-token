@@ -65,6 +65,7 @@ describe("tests", () => {
     await index.assumeRole({
       githubToken: "ghs_dummyGitHubToken",
       providerEndpoint: "http://localhost:8080",
+      audience: "",
     });
     expect(core.setSecret).toHaveBeenCalledWith("ghs_dummyGitHubToken");
   });

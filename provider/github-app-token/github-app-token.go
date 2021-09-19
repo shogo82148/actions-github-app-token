@@ -85,7 +85,8 @@ func NewHandler() (*Handler, error) {
 }
 
 type requestBody struct {
-	GitHubToken string `json:"github_token"`
+	GitHubToken string `json:"github_token,omitempty"`
+	IDToken     string `json:"id_token,omitempty"`
 	Repository  string `json:"repository"`
 	SHA         string `json:"sha"`
 	APIURL      string `json:"api_url"`

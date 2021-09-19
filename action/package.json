@@ -11,7 +11,7 @@
   "author": "Shogo Ichinose",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.5.0",
+    "@actions/core": "^1.6.0-beta.0",
     "@actions/http-client": "^1.0.11"
   },
   "devDependencies": {

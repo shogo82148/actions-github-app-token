@@ -40,10 +40,15 @@ func init() {
 
 // Client is a very light weight GitHub API Client.
 type Client struct {
-	baseURL       string
-	httpClient    *http.Client
+	baseURL    string
+	httpClient *http.Client
+
+	// configure for GitHub App
 	appID         uint64
 	rsaPrivateKey *rsa.PrivateKey
+
+	// configure for OpenID Connect
+	issuer string
 }
 
 func NewClient(httpClient *http.Client, appID uint64, privateKey []byte) (*Client, error) {
@@ -54,6 +59,7 @@ func NewClient(httpClient *http.Client, appID uint64, privateKey []byte) (*Clien
 		baseURL:    apiBaseURL,
 		httpClient: httpClient,
 		appID:      appID,
+		issuer:     "https://vstoken.actions.githubusercontent.com",
 	}
 
 	if privateKey != nil {
