@@ -3,12 +3,15 @@ package github
 import (
 	"context"
 	"crypto/rsa"
+	"crypto/sha1"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -116,8 +119,6 @@ func (c *Client) getOpenIDConfiguration(ctx context.Context) (*openIDConfigurati
 		return nil, newErrUnexpectedStatusCode(resp)
 	}
 
-	// TODO: verify the certificate of the issuer
-
 	var config openIDConfiguration
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&config); err != nil {
@@ -139,6 +140,28 @@ func (c *Client) getJWKS(ctx context.Context, url string) (map[string]*rsa.Publi
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	// verify the certificate
+	if resp.TLS == nil {
+		return nil, errors.New("getting jwks must use encrypted")
+	}
+	if certs := resp.TLS.PeerCertificates; len(certs) > 0 {
+		cert := certs[len(certs)-1]
+		sum := sha1.Sum(cert.Raw)
+		thumbprint := hex.EncodeToString(sum[:])
+		found := false
+		for _, want := range c.thumbprints {
+			if strings.EqualFold(thumbprint, want) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, errors.New("got invalid certificate during getting jwks")
+		}
+	} else {
+		return nil, errors.New("getting jwks must use encrypted")
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, newErrUnexpectedStatusCode(resp)

@@ -19,9 +19,16 @@ import (
 )
 
 const (
-	githubUserAgent   = "actions-github-token/1.0"
+	// The value of User-Agent header
+	githubUserAgent = "actions-github-token/1.0"
+
+	// The default url of Github API
 	defaultAPIBaseURL = "https://api.github.com"
+
+	oidcIssuer = "https://vstoken.actions.githubusercontent.com"
 )
+
+var oidcThumbprints = []string{"a031c46782e6e6c662c2c87c76da9aa62ccabd8e"}
 
 var apiBaseURL string
 
@@ -48,7 +55,8 @@ type Client struct {
 	rsaPrivateKey *rsa.PrivateKey
 
 	// configure for OpenID Connect
-	issuer string
+	issuer      string
+	thumbprints []string
 }
 
 func NewClient(httpClient *http.Client, appID uint64, privateKey []byte) (*Client, error) {
@@ -56,10 +64,11 @@ func NewClient(httpClient *http.Client, appID uint64, privateKey []byte) (*Clien
 		httpClient = http.DefaultClient
 	}
 	c := &Client{
-		baseURL:    apiBaseURL,
-		httpClient: httpClient,
-		appID:      appID,
-		issuer:     "https://vstoken.actions.githubusercontent.com",
+		baseURL:     apiBaseURL,
+		httpClient:  httpClient,
+		appID:       appID,
+		issuer:      oidcIssuer,
+		thumbprints: oidcThumbprints,
 	}
 
 	if privateKey != nil {
