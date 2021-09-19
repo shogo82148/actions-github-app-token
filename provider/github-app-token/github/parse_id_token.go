@@ -29,6 +29,7 @@ type ActionsIDToken struct {
 	EventName       string `json:"event_name"`
 	EventType       string `json:"branch"`
 	JobWorkflowRef  string `json:"job_workflow_ref"`
+	Environment     string `json:"environment"`
 }
 
 type openIDConfiguration struct {
