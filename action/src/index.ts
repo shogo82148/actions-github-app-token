@@ -93,7 +93,7 @@ export async function assumeRole(params: GetTokenParams) {
   const result = await client.postJson<GetTokenResult | GetTokenError>(params.providerEndpoint, payload, headers);
   if (result.statusCode !== http.HttpCodes.OK) {
     const resp = result.result as GetTokenError;
-    core.setFailed(resp.message);
+    core.setFailed(resp?.message || "unknown error");
     return;
   }
   const resp = result.result as GetTokenResult;

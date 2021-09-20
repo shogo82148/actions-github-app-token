@@ -2,6 +2,7 @@ package githubapptoken
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
@@ -45,7 +46,7 @@ func (c *githubClientDummy) ValidateAPIURL(url string) error {
 }
 
 func (c *githubClientDummy) ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error) {
-	return &github.ActionsIDToken{}, nil
+	return nil, errors.New("invalid jwt")
 }
 
 func NewDummyHandler() *Handler {
