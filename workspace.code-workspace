@@ -22,7 +22,8 @@
 		},
 		"cSpell.words": [
 			"jwks",
-			"JWKSURI"
+			"JWKSURI",
+			"oidc"
 		]
 	}
 }
