@@ -4,10 +4,10 @@ import * as http from "@actions/http-client";
 interface GetTokenParams {
   githubToken: string;
   providerEndpoint: string;
+  audience: string;
 }
 
 interface GetTokenPayload {
-  github_token: string;
   api_url: string;
   repository: string;
   sha: string;
@@ -71,20 +71,29 @@ export async function assumeRole(params: GetTokenParams) {
   const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
   assertIsDefined(GITHUB_REPOSITORY);
   assertIsDefined(GITHUB_SHA);
-  validateGitHubToken(params.githubToken);
   const GITHUB_API_URL = process.env["GITHUB_API_URL"] || "https://api.github.com";
 
   const payload: GetTokenPayload = {
-    github_token: params.githubToken,
     api_url: GITHUB_API_URL,
     repository: GITHUB_REPOSITORY,
     sha: GITHUB_SHA,
   };
+  const headers: { [name: string]: string } = {};
+
+  let token: string;
+  if (isIdTokenAvailable()) {
+    token = await core.getIDToken(params.audience);
+  } else {
+    validateGitHubToken(params.githubToken);
+    token = params.githubToken;
+  }
+  headers["Authorization"] = `Bearer ${token}`;
+
   const client = new http.HttpClient("actions-github-app-token");
-  const result = await client.postJson<GetTokenResult | GetTokenError>(params.providerEndpoint, payload);
-  if (result.statusCode !== 200) {
+  const result = await client.postJson<GetTokenResult | GetTokenError>(params.providerEndpoint, payload, headers);
+  if (result.statusCode !== http.HttpCodes.OK) {
     const resp = result.result as GetTokenError;
-    core.setFailed(resp.message);
+    core.setFailed(resp?.message || "unknown error");
     return;
   }
   const resp = result.result as GetTokenResult;
@@ -102,6 +111,12 @@ export async function assumeRole(params: GetTokenParams) {
   core.saveState("token", resp.github_token);
 }
 
+function isIdTokenAvailable(): boolean {
+  const token = process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
+  const url = process.env["ACTIONS_ID_TOKEN_REQUEST_URL"];
+  return token && url ? true : false;
+}
+
 async function run() {
   try {
     const required = {
@@ -110,9 +125,12 @@ async function run() {
     const githubToken = core.getInput("github-token", required);
     const providerEndpoint =
       core.getInput("provider-endpoint") || "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
+    const audience = core.getInput("audience", { required: false });
+
     await assumeRole({
       githubToken,
       providerEndpoint,
+      audience,
     });
   } catch (error) {
     if (error instanceof Error) {

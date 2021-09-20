@@ -15,6 +15,7 @@ type githubClientMock struct {
 	GetReposInstallationFunc func(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
 	CreateAppAccessTokenFunc func(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURLFunc       func(url string) error
+	ParseIDTokenFunc         func(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
 }
 
 func (c *githubClientMock) GetApp(ctx context.Context) (*github.GetAppResponse, error) {
@@ -35,6 +36,10 @@ func (c *githubClientMock) CreateAppAccessToken(ctx context.Context, installatio
 
 func (c *githubClientMock) ValidateAPIURL(url string) error {
 	return c.ValidateAPIURLFunc(url)
+}
+
+func (c *githubClientMock) ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error) {
+	return c.ParseIDTokenFunc(ctx, idToken)
 }
 
 func TestValidateGitHubToken(t *testing.T) {
@@ -72,10 +77,9 @@ func TestValidateGitHubToken(t *testing.T) {
 			},
 		},
 	}
-	err := h.validateGitHubToken(context.Background(), &requestBody{
-		GitHubToken: "ghs_dummyGitHubToken",
-		Repository:  "fuller-inc/actions-aws-assume-role",
-		SHA:         "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
+	err := h.validateGitHubToken(context.Background(), "ghs_dummyGitHubToken", &requestBody{
+		Repository: "fuller-inc/actions-aws-assume-role",
+		SHA:        "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
 	})
 	if err != nil {
 		t.Error(err)
@@ -92,10 +96,9 @@ func TestValidateGitHubToken_PermissionError(t *testing.T) {
 			},
 		},
 	}
-	err := h.validateGitHubToken(context.Background(), &requestBody{
-		GitHubToken: "ghs_dummyGitHubToken",
-		Repository:  "fuller-inc/actions-aws-assume-role",
-		SHA:         "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
+	err := h.validateGitHubToken(context.Background(), "ghs_dummyGitHubToken", &requestBody{
+		Repository: "fuller-inc/actions-aws-assume-role",
+		SHA:        "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
 	})
 	if err == nil {
 		t.Error("want error, but not")
@@ -124,10 +127,9 @@ func TestValidateGitHubToken_InvalidCreator(t *testing.T) {
 			},
 		},
 	}
-	err := h.validateGitHubToken(context.Background(), &requestBody{
-		GitHubToken: "ghs_dummyGitHubToken",
-		Repository:  "fuller-inc/actions-aws-assume-role",
-		SHA:         "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
+	err := h.validateGitHubToken(context.Background(), "ghs_dummyGitHubToken", &requestBody{
+		Repository: "fuller-inc/actions-aws-assume-role",
+		SHA:        "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
 	})
 	if err == nil {
 		t.Error("want error, but not")
