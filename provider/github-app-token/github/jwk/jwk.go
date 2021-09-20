@@ -4,12 +4,12 @@ package jwk
 import (
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/subtle"
 	"crypto/x509"
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 )
 
 type Key interface {
@@ -137,12 +137,15 @@ func (key *commonKey) decode() error {
 
 	// check thumbprints
 	if key.X5t != "" {
-		if len(key.X5c) == 0 {
+		if len(certs) == 0 {
 			return errors.New("jwk: the certificate is not found")
 		}
-		sum := sha1.Sum(key.X5c[0])
-		thumbprint := hex.EncodeToString(sum[:])
-		if !strings.EqualFold(key.X5t, thumbprint) {
+		got := sha1.Sum(key.X5c[0])
+		want, err := base64.RawURLEncoding.DecodeString(key.X5t)
+		if err != nil {
+			return fmt.Errorf("jwk: failed to decode the sha-1 thumbprint: %w", err)
+		}
+		if subtle.ConstantTimeCompare(got[:], want) == 0 {
 			return errors.New("jwk: the sha-1 thumbprint of the certificate is missmatch")
 		}
 	}
@@ -150,10 +153,13 @@ func (key *commonKey) decode() error {
 		if len(key.X5c) == 0 {
 			return errors.New("jwk: the certificate is not found")
 		}
-		sum := sha256.Sum256(key.X5c[0])
-		thumbprint := hex.EncodeToString(sum[:])
-		if !strings.EqualFold(key.X5tS256, thumbprint) {
-			return errors.New("jwk: the sha-1 thumbprint of the certificate is missmatch")
+		got := sha256.Sum256(key.X5c[0])
+		want, err := base64.RawURLEncoding.DecodeString(key.X5tS256)
+		if err != nil {
+			return fmt.Errorf("jwk: failed to decode the sha-256 thumbprint: %w", err)
+		}
+		if subtle.ConstantTimeCompare(got[:], want) == 0 {
+			return errors.New("jwk: the sha-256 thumbprint of the certificate is missmatch")
 		}
 	}
 

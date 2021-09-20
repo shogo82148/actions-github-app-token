@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/oidc"
 )
 
 func TestParseIDToken_Intergrated(t *testing.T) {
@@ -29,11 +31,15 @@ func TestParseIDToken_Intergrated(t *testing.T) {
 	// The clock of the token vendor is drifted from the GitHub Actions' runners.
 	time.Sleep(5 * time.Second)
 
+	oidcClient, err := oidc.NewClient(http.DefaultClient, oidcIssuer, oidcThumbprints)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	c := &Client{
-		baseURL:     apiBaseURL,
-		httpClient:  http.DefaultClient,
-		issuer:      oidcIssuer,
-		thumbprints: oidcThumbprints,
+		baseURL:    apiBaseURL,
+		httpClient: http.DefaultClient,
+		oidcClient: oidcClient,
 	}
 	id, err := c.ParseIDToken(ctx, token)
 	if err != nil {

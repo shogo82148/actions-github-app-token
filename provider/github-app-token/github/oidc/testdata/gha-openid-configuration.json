@@ -1,0 +1,26 @@
+{
+  "issuer": "https://vstoken.actions.githubusercontent.com",
+  "jwks_uri": "https://vstoken.actions.githubusercontent.com/.well-known/jwks",
+  "subject_types_supported": [
+    "public",
+    "pairwise"
+  ],
+  "response_types_supported": [
+    "id_token"
+  ],
+  "claims_supported": [
+    "sub",
+    "aud",
+    "exp",
+    "iat",
+    "iss",
+    "jti",
+    "nbf"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "RS256"
+  ],
+  "scopes_supported": [
+    "openid"
+  ]
+}
