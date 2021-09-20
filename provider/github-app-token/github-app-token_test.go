@@ -77,10 +77,9 @@ func TestValidateGitHubToken(t *testing.T) {
 			},
 		},
 	}
-	err := h.validateGitHubToken(context.Background(), &requestBody{
-		GitHubToken: "ghs_dummyGitHubToken",
-		Repository:  "fuller-inc/actions-aws-assume-role",
-		SHA:         "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
+	err := h.validateGitHubToken(context.Background(), "ghs_dummyGitHubToken", &requestBody{
+		Repository: "fuller-inc/actions-aws-assume-role",
+		SHA:        "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
 	})
 	if err != nil {
 		t.Error(err)
@@ -97,10 +96,9 @@ func TestValidateGitHubToken_PermissionError(t *testing.T) {
 			},
 		},
 	}
-	err := h.validateGitHubToken(context.Background(), &requestBody{
-		GitHubToken: "ghs_dummyGitHubToken",
-		Repository:  "fuller-inc/actions-aws-assume-role",
-		SHA:         "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
+	err := h.validateGitHubToken(context.Background(), "ghs_dummyGitHubToken", &requestBody{
+		Repository: "fuller-inc/actions-aws-assume-role",
+		SHA:        "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
 	})
 	if err == nil {
 		t.Error("want error, but not")
@@ -129,10 +127,9 @@ func TestValidateGitHubToken_InvalidCreator(t *testing.T) {
 			},
 		},
 	}
-	err := h.validateGitHubToken(context.Background(), &requestBody{
-		GitHubToken: "ghs_dummyGitHubToken",
-		Repository:  "fuller-inc/actions-aws-assume-role",
-		SHA:         "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
+	err := h.validateGitHubToken(context.Background(), "ghs_dummyGitHubToken", &requestBody{
+		Repository: "fuller-inc/actions-aws-assume-role",
+		SHA:        "e3a45c6c16c1464826b36a598ff39e6cc98c4da4",
 	})
 	if err == nil {
 		t.Error("want error, but not")

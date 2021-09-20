@@ -8,8 +8,6 @@ interface GetTokenParams {
 }
 
 interface GetTokenPayload {
-  github_token?: string;
-  id_token?: string;
   api_url: string;
   repository: string;
   sha: string;
@@ -80,17 +78,20 @@ export async function assumeRole(params: GetTokenParams) {
     repository: GITHUB_REPOSITORY,
     sha: GITHUB_SHA,
   };
+  const headers: { [name: string]: string } = {};
 
+  let token: string;
   if (isIdTokenAvailable()) {
-    payload.id_token = await core.getIDToken(params.audience);
+    token = await core.getIDToken(params.audience);
   } else {
     validateGitHubToken(params.githubToken);
-    payload.github_token = params.githubToken;
+    token = params.githubToken;
   }
+  headers["Authorization"] = `Bearer ${token}`;
 
   const client = new http.HttpClient("actions-github-app-token");
-  const result = await client.postJson<GetTokenResult | GetTokenError>(params.providerEndpoint, payload);
-  if (result.statusCode !== 200) {
+  const result = await client.postJson<GetTokenResult | GetTokenError>(params.providerEndpoint, payload, headers);
+  if (result.statusCode !== http.HttpCodes.OK) {
     const resp = result.result as GetTokenError;
     core.setFailed(resp.message);
     return;
