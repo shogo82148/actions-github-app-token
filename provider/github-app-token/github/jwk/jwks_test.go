@@ -9,13 +9,12 @@ func TestSetAppendixA(t *testing.T) {
 		rawKeys := `{` +
 			`"keys":` +
 			`[` +
-			// TODO: implement EC type
-			// `{"kty":"EC",` +
-			// `"crv":"P-256",` +
-			// `"x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",` +
-			// `"y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",` +
-			// `"use":"enc",` +
-			// `"kid":"1"},` +
+			`{"kty":"EC",` +
+			`"crv":"P-256",` +
+			`"x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",` +
+			`"y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",` +
+			`"use":"enc",` +
+			`"kid":"1"},` +
 			`{"kty":"RSA",` +
 			`"n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx` +
 			`4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMs` +
