@@ -125,7 +125,7 @@ func (key *commonKey) PublicKey() interface{} {
 
 func (key *commonKey) decode() error {
 	// decode the certificates
-	certs := make([]*x509.Certificate, len(key.X5c))
+	certs := make([]*x509.Certificate, 0, len(key.X5c))
 	for _, der := range key.X5c {
 		cert, err := x509.ParseCertificate(der)
 		if err != nil {
