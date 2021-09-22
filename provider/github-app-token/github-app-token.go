@@ -19,10 +19,12 @@ import (
 )
 
 type githubClient interface {
+	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
+	ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
 }
 
 const (
@@ -34,6 +36,7 @@ const (
 
 type Handler struct {
 	github githubClient
+	app    *github.GetAppResponse
 }
 
 func NewHandler() (*Handler, error) {
@@ -70,16 +73,22 @@ func NewHandler() (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	app, err := c.GetApp(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the app information, check your configure: %w", err)
+	}
+
 	return &Handler{
 		github: c,
+		app:    app,
 	}, nil
 }
 
 type requestBody struct {
-	GitHubToken string `json:"github_token"`
-	Repository  string `json:"repository"`
-	SHA         string `json:"sha"`
-	APIURL      string `json:"api_url"`
+	Repository string `json:"repository"`
+	SHA        string `json:"sha"`
+	APIURL     string `json:"api_url"`
 }
 
 type responseBody struct {
@@ -120,8 +129,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	token, err := h.getAuthToken(r.Header)
+	if err != nil {
+		h.handleError(w, r, err)
+		return
+	}
 
-	resp, err := h.handle(ctx, payload)
+	resp, err := h.handle(ctx, token, payload)
 	if err != nil {
 		h.handleError(w, r, err)
 		return
@@ -133,25 +147,50 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, error) {
+func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*responseBody, error) {
 	if err := h.github.ValidateAPIURL(req.APIURL); err != nil {
 		return nil, &validationError{
 			message: err.Error(),
 		}
 	}
-	if err := h.validateGitHubToken(ctx, req); err != nil {
-		return nil, err
+
+	// authorize the request
+	var owner, repo string
+	if id, err := h.github.ParseIDToken(ctx, token); err == nil {
+		owner, repo, err = splitOwnerRepo(id.Repository)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := h.validateGitHubToken(ctx, token, req)
+		if err != nil {
+			return nil, err
+		}
+		owner, repo, err = splitOwnerRepo(req.Repository)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	owner, repo, err := splitOwnerRepo(req.Repository)
-	if err != nil {
-		return nil, err
-	}
+	// issue a new access token
 	inst, err := h.github.GetReposInstallation(ctx, owner, repo)
 	if err != nil {
+		var ghErr *github.ErrUnexpectedStatusCode
+		if errors.As(err, &ghErr) && ghErr.StatusCode == http.StatusNotFound {
+			// installation not found.
+			// the user may not install the app.
+			return nil, &validationError{
+				message: fmt.Sprintf(
+					"Installation not found. "+
+						"You need to install the GitHub App to use the action. "+
+						"See %s for more detail",
+					h.app.HTMLURL,
+				),
+			}
+		}
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
-	token, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
+	resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
 		Repositories: []string{repo},
 	})
 	if err != nil {
@@ -159,7 +198,7 @@ func (h *Handler) handle(ctx context.Context, req *requestBody) (*responseBody, 
 	}
 
 	return &responseBody{
-		GitHubToken: token.Token,
+		GitHubToken: resp.Token,
 	}, nil
 }
 
@@ -205,15 +244,31 @@ func (h *Handler) handleMethodNotAllowed(w http.ResponseWriter) {
 	w.Write(data)
 }
 
-func (h *Handler) validateGitHubToken(ctx context.Context, req *requestBody) error {
+func (h *Handler) getAuthToken(header http.Header) (string, error) {
+	const prefix = "Bearer "
+	v := header.Get("Authorization")
+	if len(v) < len(prefix) {
+		return "", &validationError{
+			message: "invalid Authorization header",
+		}
+	}
+	if !strings.EqualFold(v[:len(prefix)], prefix) {
+		return "", &validationError{
+			message: "invalid Authorization header",
+		}
+	}
+	return v[len(prefix):], nil
+}
+
+func (h *Handler) validateGitHubToken(ctx context.Context, token string, req *requestBody) error {
 	// early check of the token prefix
 	// ref. https://github.blog/changelog/2021-03-31-authentication-token-format-updates-are-generally-available/
-	if len(req.GitHubToken) < 4 {
+	if len(token) < 4 {
 		return &validationError{
 			message: "GITHUB_TOKEN has invalid format",
 		}
 	}
-	switch req.GitHubToken[:4] {
+	switch token[:4] {
 	case "ghp_":
 		// Personal Access Tokens
 		return &validationError{
@@ -243,9 +298,9 @@ func (h *Handler) validateGitHubToken(ctx context.Context, req *requestBody) err
 			message: "GITHUB_TOKEN looks like Personal Access Token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.",
 		}
 	}
-	resp, err := h.updateCommitStatus(ctx, req, &github.CreateStatusRequest{
+	resp, err := h.updateCommitStatus(ctx, token, req, &github.CreateStatusRequest{
 		State:       github.CommitStateSuccess,
-		Description: "valid github token",
+		Description: "valid GitHub token",
 		Context:     commitStatusContext,
 	})
 	if err != nil {
@@ -280,10 +335,10 @@ func splitOwnerRepo(fullname string) (owner, repo string, err error) {
 	return
 }
 
-func (h *Handler) updateCommitStatus(ctx context.Context, req *requestBody, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {
+func (h *Handler) updateCommitStatus(ctx context.Context, token string, req *requestBody, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {
 	owner, repo, err := splitOwnerRepo(req.Repository)
 	if err != nil {
 		return nil, err
 	}
-	return h.github.CreateStatus(ctx, req.GitHubToken, owner, repo, req.SHA, status)
+	return h.github.CreateStatus(ctx, token, owner, repo, req.SHA, status)
 }

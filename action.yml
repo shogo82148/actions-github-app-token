@@ -9,6 +9,9 @@ inputs:
   provider-endpoint:
     description: "URL for credential provider"
     required: false
+  audience:
+    description: "the audience of id token"
+    required: false
 outputs:
   token:
     description: An installation token for the GitHub App on the requested repository.
@@ -16,6 +19,7 @@ runs:
   using: "node12"
   main: "action/lib/index.js"
   post: "action/lib/cleanup.js"
+  post-if: always()
 branding:
   icon: "unlock"
   color: "blue"

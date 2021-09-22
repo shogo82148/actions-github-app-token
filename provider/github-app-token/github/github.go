@@ -16,12 +16,21 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/oidc"
 )
 
 const (
-	githubUserAgent   = "actions-github-token/1.0"
+	// The value of User-Agent header
+	githubUserAgent = "actions-github-token/1.0"
+
+	// The default url of Github API
 	defaultAPIBaseURL = "https://api.github.com"
+
+	oidcIssuer = "https://vstoken.actions.githubusercontent.com"
 )
+
+// The thumbprint of the certificate for https://vstoken.actions.githubusercontent.com
+var oidcThumbprints = []string{"a031c46782e6e6c662c2c87c76da9aa62ccabd8e"}
 
 var apiBaseURL string
 
@@ -38,22 +47,37 @@ func init() {
 	}
 }
 
-// Client is a very light weight GitHub API Client.
-type Client struct {
-	baseURL       string
-	httpClient    *http.Client
-	appID         uint64
-	rsaPrivateKey *rsa.PrivateKey
+// Doer is a interface for doing an http request.
+type Doer interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewClient(httpClient *http.Client, appID uint64, privateKey []byte) (*Client, error) {
+// Client is a very light weight GitHub API Client.
+type Client struct {
+	baseURL    string
+	httpClient Doer
+
+	// configure for GitHub App
+	appID         uint64
+	rsaPrivateKey *rsa.PrivateKey
+
+	// configure for OpenID Connect
+	oidcClient *oidc.Client
+}
+
+func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
+	}
+	oidcClient, err := oidc.NewClient(httpClient, oidcIssuer, oidcThumbprints)
+	if err != nil {
+		return nil, err
 	}
 	c := &Client{
 		baseURL:    apiBaseURL,
 		httpClient: httpClient,
 		appID:      appID,
+		oidcClient: oidcClient,
 	}
 
 	if privateKey != nil {
