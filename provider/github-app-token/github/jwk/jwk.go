@@ -178,8 +178,11 @@ func ParseKey(data []byte) (Key, error) {
 	}
 	switch hint.Kty {
 	case "EC":
-		// TODO: implement private key.
-		return parseEcdsaPublicKey(data)
+		if len(hint.D) > 0 {
+			return parseEcdsaPrivateKey(data)
+		} else {
+			return parseEcdsaPublicKey(data)
+		}
 	case "RSA":
 		if len(hint.D) > 0 {
 			return parseRSAPrivateKey(data)
