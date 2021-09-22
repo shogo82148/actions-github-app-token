@@ -36,4 +36,26 @@ func TestSetAppendixA(t *testing.T) {
 			t.Error("key 2011-04-29 is not found")
 		}
 	})
+
+	t.Run("RFC 7517 A.3. Example Symmetric Keys", func(t *testing.T) {
+		rawKeys := `{"keys":` +
+			`[` +
+			`{"kty":"oct",` +
+			`"alg":"A128KW",` +
+			`"k":"GawgguFyGrWKav7AX4VKUg"},` +
+			`{"kty":"oct",` +
+			`"k":"AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75` +
+			`aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow",` +
+			`"kid":"HMAC key used in JWS spec Appendix A.1 example"}` +
+			`]` +
+			`}`
+		set, err := ParseSet([]byte(rawKeys))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, ok := set.Find("HMAC key used in JWS spec Appendix A.1 example")
+		if !ok {
+			t.Error("key \"HMAC key used in JWS spec Appendix A.1 example\" is not found")
+		}
+	})
 }
