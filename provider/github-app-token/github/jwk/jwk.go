@@ -183,6 +183,8 @@ func ParseKey(data []byte) (Key, error) {
 		} else {
 			return parseRSAPublicKey(data)
 		}
+	case "oct":
+		return parseSymmetricKey(data)
 	default:
 		return nil, fmt.Errorf("jwk: unknown key type: %s", hint.Kty)
 	}
