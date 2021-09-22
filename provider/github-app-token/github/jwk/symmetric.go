@@ -30,6 +30,10 @@ func parseSymmetricKey(data []byte) (Key, error) {
 	return &key, nil
 }
 
+func (key *symmetricKey) PrivateKey() interface{} {
+	return key.key
+}
+
 // decode decodes the encoded values into publicKey.
 func (key *symmetricKey) decode() error {
 	k, err := base64.RawURLEncoding.DecodeString(key.K)
