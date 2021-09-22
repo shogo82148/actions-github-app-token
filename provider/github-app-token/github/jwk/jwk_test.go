@@ -68,6 +68,37 @@ func TestKeyAppendixA(t *testing.T) {
 		}
 	})
 
+	t.Run("RFC 7517 A.2. Example Private Keys (EC)", func(t *testing.T) {
+		rawKey := `{"kty":"EC",` +
+			`"crv":"P-256",` +
+			`"x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",` +
+			`"y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",` +
+			`"d":"870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE",` +
+			`"use":"enc",` +
+			`"kid":"1"}`
+		key, err := ParseKey([]byte(rawKey))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if key.KeyType() != "EC" {
+			t.Errorf("unexpected key type: want %s, got %s", "EC", key.KeyType())
+		}
+		privateKey, ok := key.PrivateKey().(*ecdsa.PrivateKey)
+		if !ok {
+			t.Errorf("unexpected key type: want *ecdsa.PrivateKey, got %T", key.PrivateKey())
+		}
+		if privateKey.Curve.Params().Name != "P-256" {
+			t.Errorf("unexpected curve: want P-256, got %s", privateKey.Curve.Params().Name)
+		}
+		publicKey, ok := key.PublicKey().(*ecdsa.PublicKey)
+		if !ok {
+			t.Errorf("unexpected key type: want *ecdsa.PublicKey, got %T", key.PublicKey())
+		}
+		if !privateKey.PublicKey.Equal(publicKey) {
+			t.Error("public keys are mismatch")
+		}
+	})
+
 	t.Run("RFC 7517 A.2. Example Private Keys (RSA)", func(t *testing.T) {
 		rawKey := `{"kty":"RSA",` +
 			`"n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4` +

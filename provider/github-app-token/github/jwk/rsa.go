@@ -83,13 +83,13 @@ func (key *rsaPrivateKey) decode() error {
 	for _, v := range dataE {
 		e = (e << 8) | int(v)
 	}
-	key.privateKey.PublicKey.E = e
+	key.privateKey.E = e
 
 	dataN, err := base64.RawURLEncoding.DecodeString(key.N)
 	if err != nil {
 		return fmt.Errorf("jwk: failed to parse parameter n: %w", err)
 	}
-	key.privateKey.PublicKey.N = new(big.Int).SetBytes(dataN)
+	key.privateKey.N = new(big.Int).SetBytes(dataN)
 
 	// parameters for private key
 	dataD, err := base64.RawURLEncoding.DecodeString(key.D)
