@@ -2,13 +2,14 @@ package jwk
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rsa"
 	"reflect"
 	"testing"
 )
 
-func TestKeyAppendixA(t *testing.T) {
+func TestKey_RFC7517AppendixA(t *testing.T) {
 	t.Run("RFC 7517 A.1. Example Public Keys (EC)", func(t *testing.T) {
 		rawKey := `{"kty":"EC",` +
 			`"crv":"P-256",` +
@@ -208,7 +209,7 @@ func TestKeyAppendixA(t *testing.T) {
 	})
 }
 
-func TestKeyAppendixB(t *testing.T) {
+func TestKey_RFC7517AppendixB(t *testing.T) {
 	// RFC7517 Appendix B. Example Use of "x5c" (X.509 Certificate Chain) Parameter
 	rawKey := ` {"kty":"RSA",` +
 		`"use":"sig",` +
@@ -262,4 +263,68 @@ func TestKeyAppendixB(t *testing.T) {
 	if cert.Issuer.String() != issuer {
 		t.Errorf("unexpected issuer: want %q, got %q", issuer, cert.Issuer.String())
 	}
+}
+
+func TestKey_RFC8037AppendixA(t *testing.T) {
+	t.Run("A.1. Ed25519 Private Key", func(t *testing.T) {
+		rawKey := `{"kty":"OKP","crv":"Ed25519",` +
+			`"d":"nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",` +
+			`"x":"11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"}`
+		key, err := ParseKey([]byte(rawKey))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if key.KeyType() != "OKP" {
+			t.Errorf("unexpected key type: want %s, got %s", "OKP", key.KeyType())
+		}
+		privateKey, ok := key.PrivateKey().(ed25519.PrivateKey)
+		if !ok {
+			t.Errorf("unexpected private key type: want ed25519.PrivateKey, got %T", key.PrivateKey())
+		}
+		privateKeyExpected := ed25519.PrivateKey{
+			0x9d, 0x61, 0xb1, 0x9d, 0xef, 0xfd, 0x5a, 0x60, 0xba, 0x84, 0x4a, 0xf4, 0x92, 0xec, 0x2c, 0xc4,
+			0x44, 0x49, 0xc5, 0x69, 0x7b, 0x32, 0x69, 0x19, 0x70, 0x3b, 0xac, 0x03, 0x1c, 0xae, 0x7f, 0x60,
+			0xd7, 0x5a, 0x98, 0x01, 0x82, 0xb1, 0x0a, 0xb7, 0xd5, 0x4b, 0xfe, 0xd3, 0xc9, 0x64, 0x07, 0x3a,
+			0x0e, 0xe1, 0x72, 0xf3, 0xda, 0xa6, 0x23, 0x25, 0xaf, 0x02, 0x1a, 0x68, 0xf7, 0x07, 0x51, 0x1a,
+		}
+		if !privateKey.Equal(privateKeyExpected) {
+			t.Errorf("unexpected private key: want %x, got %x", privateKeyExpected, privateKey)
+		}
+
+		publicKey, ok := key.PublicKey().(ed25519.PublicKey)
+		if !ok {
+			t.Errorf("unexpected public key type: want ed25519.PublicKey, got %T", key.PublicKey())
+		}
+		publicKeyExpected := ed25519.PublicKey{
+			0xd7, 0x5a, 0x98, 0x01, 0x82, 0xb1, 0x0a, 0xb7, 0xd5, 0x4b, 0xfe, 0xd3, 0xc9, 0x64, 0x07, 0x3a,
+			0x0e, 0xe1, 0x72, 0xf3, 0xda, 0xa6, 0x23, 0x25, 0xaf, 0x02, 0x1a, 0x68, 0xf7, 0x07, 0x51, 0x1a,
+		}
+		if !publicKey.Equal(publicKeyExpected) {
+			t.Errorf("unexpected public key: want %x, got %x", publicKeyExpected, publicKey)
+		}
+	})
+
+	t.Run("A.2. Ed25519 Public Key", func(t *testing.T) {
+		rawKey := `{"kty":"OKP","crv":"Ed25519",` +
+			`"x":"11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"}`
+		key, err := ParseKey([]byte(rawKey))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if key.KeyType() != "OKP" {
+			t.Errorf("unexpected key type: want %s, got %s", "OKP", key.KeyType())
+		}
+
+		publicKey, ok := key.PublicKey().(ed25519.PublicKey)
+		if !ok {
+			t.Errorf("unexpected public key type: want ed25519.PublicKey, got %T", key.PublicKey())
+		}
+		publicKeyExpected := ed25519.PublicKey{
+			0xd7, 0x5a, 0x98, 0x01, 0x82, 0xb1, 0x0a, 0xb7, 0xd5, 0x4b, 0xfe, 0xd3, 0xc9, 0x64, 0x07, 0x3a,
+			0x0e, 0xe1, 0x72, 0xf3, 0xda, 0xa6, 0x23, 0x25, 0xaf, 0x02, 0x1a, 0x68, 0xf7, 0x07, 0x51, 0x1a,
+		}
+		if !publicKey.Equal(publicKeyExpected) {
+			t.Errorf("unexpected public key: want %x, got %x", publicKeyExpected, publicKey)
+		}
+	})
 }

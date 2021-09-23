@@ -170,6 +170,7 @@ func (key *commonKey) decode() error {
 func ParseKey(data []byte) (Key, error) {
 	var hint struct {
 		Kty string          `json:"kty"`
+		Crv string          `json:"crv"`
 		D   json.RawMessage `json:"d"`
 	}
 
@@ -188,6 +189,12 @@ func ParseKey(data []byte) (Key, error) {
 			return parseRSAPrivateKey(data)
 		} else {
 			return parseRSAPublicKey(data)
+		}
+	case "OKP":
+		if len(hint.D) > 0 {
+			return parseOkpPrivateKey(data, hint.Crv)
+		} else {
+			return parseOkpPublicKey(data, hint.Crv)
 		}
 	case "oct":
 		return parseSymmetricKey(data)
