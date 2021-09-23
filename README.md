@@ -22,7 +22,7 @@ The action provides [the GitHub Token Vending API](./provider) to manage token p
 
 ### Install the GitHub App
 
-Create a new your own GitHub App, or install [My Sample App](https://github.com/apps/shogo82148-slim).
+Create a new your own GitHub App, or install [My Demonstration App](https://github.com/apps/shogo82148-slim).
 
 ### Deploy the GitHub Token Vending API
 
@@ -49,7 +49,7 @@ jobs:
     steps:
       - id: generate
         uses: shogo82148/actions-github-app-token@v0
-        # Optional (defaults to My Sample App).
+        # Optional (defaults to My Demonstration App).
         # with:
         #   provider-endpoint: https://EXAMPLE.execute-api.us-east-1.amazonaws.com/
       - run: |
