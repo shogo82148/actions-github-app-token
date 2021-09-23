@@ -51,6 +51,7 @@ func NewClient(httpClient Doer, issuer string, thumbprints []string) (*Client, e
 
 func (c *Client) ParseWithClaims(ctx context.Context, tokenString string, claims jwt.Claims) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// get JSON Web Key Set
 		config, err := c.GetConfig(ctx)
 		if err != nil {
 			return nil, err
@@ -63,9 +64,29 @@ func (c *Client) ParseWithClaims(ctx context.Context, tokenString string, claims
 		if !ok {
 			return nil, errors.New("oidc: kid of JWT is not found")
 		}
+
+		// find the key
 		key, ok := keys.Find(kid)
 		if !ok {
 			return nil, errors.New("oidc: key is not found")
+		}
+
+		// verify signing method
+		switch key.KeyType() {
+		case "RSA":
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, errors.New("oidc: unexpected signing method")
+			}
+		case "EC":
+			if _, ok := token.Method.(*jwt.SigningMethodECDSA); !ok {
+				return nil, errors.New("oidc: unexpected signing method")
+			}
+		case "OKP":
+			if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
+				return nil, errors.New("oidc: unexpected signing method")
+			}
+		default:
+			return nil, fmt.Errorf("oidc: unknown key type: %s", key.KeyType())
 		}
 		return key.PublicKey(), nil
 	})
