@@ -5,6 +5,7 @@ import (
 	"crypto/elliptic"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 )
@@ -47,6 +48,19 @@ func parseEcdsaPrivateKey(data []byte) (Key, error) {
 	if err := key.decode(); err != nil {
 		return nil, err
 	}
+
+	// sanity check of the certificate
+	if certs := key.X509CertificateChain(); len(certs) > 0 {
+		cert := certs[0]
+		publicKey, ok := cert.PublicKey.(*ecdsa.PublicKey)
+		if !ok {
+			return nil, errors.New("jwk: public key types are mismatch")
+		}
+		if !key.privateKey.PublicKey.Equal(publicKey) {
+			return nil, errors.New("jwk: public keys are mismatch")
+		}
+	}
+
 	return &key, nil
 }
 
@@ -117,6 +131,19 @@ func parseEcdsaPublicKey(data []byte) (Key, error) {
 	if err := key.decode(); err != nil {
 		return nil, err
 	}
+
+	// sanity check of the certificate
+	if certs := key.X509CertificateChain(); len(certs) > 0 {
+		cert := certs[0]
+		publicKey, ok := cert.PublicKey.(*ecdsa.PublicKey)
+		if !ok {
+			return nil, errors.New("jwk: public key types are mismatch")
+		}
+		if !key.publicKey.Equal(publicKey) {
+			return nil, errors.New("jwk: public keys are mismatch")
+		}
+	}
+
 	return &key, nil
 }
 
