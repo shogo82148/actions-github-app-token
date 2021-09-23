@@ -28,9 +28,6 @@ func TestParseIDToken_Intergrated(t *testing.T) {
 	}
 	t.Logf("the id is issued at %s", time.Now())
 
-	// The clock of the token vendor is drifted from the GitHub Actions' runners.
-	time.Sleep(5 * time.Second)
-
 	oidcClient, err := oidc.NewClient(http.DefaultClient, oidcIssuer, oidcThumbprints)
 	if err != nil {
 		t.Fatal(err)
