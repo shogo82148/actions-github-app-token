@@ -5,17 +5,19 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/oidc"
 )
 
 type ActionsIDToken struct {
 	// common jwt parameters
-	Audience  string `json:"aud,omitempty"`
-	ExpiresAt int64  `json:"exp,omitempty"`
-	Id        string `json:"jti,omitempty"`
-	IssuedAt  int64  `json:"iat,omitempty"`
-	Issuer    string `json:"iss,omitempty"`
-	NotBefore int64  `json:"nbf,omitempty"`
-	Subject   string `json:"sub,omitempty"`
+	Audience  string            `json:"aud,omitempty"`
+	ExpiresAt *oidc.NumericDate `json:"exp,omitempty"`
+	Id        string            `json:"jti,omitempty"`
+	IssuedAt  *oidc.NumericDate `json:"iat,omitempty"`
+	Issuer    string            `json:"iss,omitempty"`
+	NotBefore *oidc.NumericDate `json:"nbf,omitempty"`
+	Subject   string            `json:"sub,omitempty"`
 
 	// GitHub's extara parameters
 	Ref             string `json:"ref,omitempty"`
@@ -51,22 +53,18 @@ func (token *ActionsIDToken) Valid() error {
 		return fmt.Errorf("github: unexpected issuer: %q", token.Issuer)
 	}
 
-	if token.ExpiresAt == 0 {
+	if token.ExpiresAt == nil {
 		return errors.New("github: the exp (expires at) parameter is not set")
 	}
-	truncatedTime := now.Truncate(time.Second).Unix()
-	if truncatedTime >= token.ExpiresAt {
+	if token.ExpiresAt.Before(now) {
 		return errors.New("github: the token is already expired")
 	}
 
-	if token.NotBefore == 0 {
+	if token.NotBefore == nil {
 		return errors.New("github: the nbf (not before) paremeter is not set")
 	}
 
-	// the not before parameter might be a future time, because GitHub rounds off it.
-	// we rounds up the current time here to accept such a case.
-	roundedUpTime := now.Add(time.Second - 1).Truncate(time.Second).Unix()
-	if roundedUpTime < token.NotBefore {
+	if now.Before(token.NotBefore.Time) {
 		return errors.New("github: the token is not valid yet")
 	}
 
