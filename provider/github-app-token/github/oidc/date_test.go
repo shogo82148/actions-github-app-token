@@ -52,6 +52,15 @@ func TestNumericDate_MarshalJSON(t *testing.T) {
 	}
 }
 
+func BenchmarkNumericDate_MarshalJSON(b *testing.B) {
+	date := NumericDate{
+		time.Date(9999, time.December, 31, 23, 59, 59, 999_999_999, time.UTC),
+	}
+	for i := 0; i < b.N; i++ {
+		date.MarshalJSON()
+	}
+}
+
 func TestNumericDate_UnmarshalJSON(t *testing.T) {
 	testCases := []struct {
 		input string
@@ -86,5 +95,13 @@ func TestNumericDate_UnmarshalJSON(t *testing.T) {
 		if !got.Equal(tc.date) {
 			t.Errorf("the result of %q is unexpected: want %s, got %s", tc.input, tc.date, got)
 		}
+	}
+}
+
+func BenchmarkNumericDate_UnmarshalJSON(b *testing.B) {
+	input := []byte("253402300799.999999999")
+	for i := 0; i < b.N; i++ {
+		var date NumericDate
+		date.UnmarshalJSON(input)
 	}
 }
