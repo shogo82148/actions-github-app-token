@@ -56,7 +56,7 @@ func (token *ActionsIDToken) Valid() error {
 	if token.ExpiresAt == nil {
 		return errors.New("github: the exp (expires at) parameter is not set")
 	}
-	if !token.ExpiresAt.Before(now) {
+	if token.ExpiresAt.Before(now) {
 		return errors.New("github: the token is already expired")
 	}
 
