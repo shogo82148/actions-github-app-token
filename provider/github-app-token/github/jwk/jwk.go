@@ -169,9 +169,9 @@ func (key *commonKey) decode() error {
 // ParseKey parses a JWK.
 func ParseKey(data []byte) (Key, error) {
 	var hint struct {
-		Kty string          `json:"kty"`
-		Crv string          `json:"crv"`
-		D   json.RawMessage `json:"d"`
+		Kty string   `json:"kty"`
+		Crv string   `json:"crv"`
+		D   hasValue `json:"d"`
 	}
 
 	if err := json.Unmarshal(data, &hint); err != nil {
@@ -179,19 +179,19 @@ func ParseKey(data []byte) (Key, error) {
 	}
 	switch hint.Kty {
 	case "EC":
-		if len(hint.D) > 0 {
+		if hint.D {
 			return parseEcdsaPrivateKey(data)
 		} else {
 			return parseEcdsaPublicKey(data)
 		}
 	case "RSA":
-		if len(hint.D) > 0 {
+		if hint.D {
 			return parseRSAPrivateKey(data)
 		} else {
 			return parseRSAPublicKey(data)
 		}
 	case "OKP":
-		if len(hint.D) > 0 {
+		if hint.D {
 			return parseOkpPrivateKey(data, hint.Crv)
 		} else {
 			return parseOkpPublicKey(data, hint.Crv)
@@ -201,4 +201,13 @@ func ParseKey(data []byte) (Key, error) {
 	default:
 		return nil, fmt.Errorf("jwk: unknown key type: %s", hint.Kty)
 	}
+}
+
+// hasValue checks a JSON string has the specific key.
+// it don't parse the value.
+type hasValue bool
+
+func (v *hasValue) UnmarshalJSON(data []byte) error {
+	*v = true
+	return nil
 }
