@@ -166,7 +166,7 @@ func (key *ecdsaPublicKey) decode() error {
 	key.publicKey.X = new(big.Int).SetBytes(ctx.decode(key.X, "x"))
 	key.publicKey.Y = new(big.Int).SetBytes(ctx.decode(key.Y, "y"))
 
-	return nil
+	return ctx.err
 }
 
 func (key *ecdsaPublicKey) getContext() base64Context {
