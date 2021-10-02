@@ -2,10 +2,8 @@ package jwk
 
 import (
 	"crypto/rsa"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 )
 
@@ -88,64 +86,31 @@ func (key *rsaPrivateKey) PublicKey() interface{} {
 }
 
 func (key *rsaPrivateKey) decode() error {
+	ctx := key.getContext()
+
 	// parameters for public key
-	dataE, err := base64.RawURLEncoding.DecodeString(key.E)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter e: %w", err)
-	}
 	var e int
-	for _, v := range dataE {
+	for _, v := range ctx.decode(key.E, "e") {
 		e = (e << 8) | int(v)
 	}
-	key.privateKey.E = e
+	key.privateKey.PublicKey.E = e
 
-	dataN, err := base64.RawURLEncoding.DecodeString(key.N)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter n: %w", err)
-	}
-	key.privateKey.N = new(big.Int).SetBytes(dataN)
+	key.privateKey.PublicKey.N = new(big.Int).SetBytes(ctx.decode(key.N, "n"))
 
 	// parameters for private key
-	dataD, err := base64.RawURLEncoding.DecodeString(key.D)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter d: %w", err)
-	}
-	key.privateKey.D = new(big.Int).SetBytes(dataD)
-
-	dataP, err := base64.RawURLEncoding.DecodeString(key.P)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter p: %w", err)
-	}
-	p := new(big.Int).SetBytes(dataP)
-
-	dataQ, err := base64.RawURLEncoding.DecodeString(key.Q)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter q: %w", err)
-	}
-	q := new(big.Int).SetBytes(dataQ)
+	key.privateKey.D = new(big.Int).SetBytes(ctx.decode(key.D, "d"))
+	p := new(big.Int).SetBytes(ctx.decode(key.P, "p"))
+	q := new(big.Int).SetBytes(ctx.decode(key.Q, "q"))
 
 	key.privateKey.Primes = []*big.Int{p, q}
 
 	crtValues := make([]rsa.CRTValue, 0, len(key.Oth))
-	for i, v := range key.Oth {
-		dataR, err := base64.RawURLEncoding.DecodeString(v.R)
-		if err != nil {
-			return fmt.Errorf("jwk: failed to parse parameter oth[%d].r: %w", i, err)
-		}
-		r := new(big.Int).SetBytes(dataR)
+	for _, v := range key.Oth {
+		r := new(big.Int).SetBytes(ctx.decode(v.R, "oth[].r"))
 		key.privateKey.Primes = append(key.privateKey.Primes, r)
 
-		dataD, err := base64.RawURLEncoding.DecodeString(v.D)
-		if err != nil {
-			return fmt.Errorf("jwk: failed to parse parameter oth[%d].d: %w", i, err)
-		}
-		d := new(big.Int).SetBytes(dataD)
-
-		dataT, err := base64.RawURLEncoding.DecodeString(v.T)
-		if err != nil {
-			return fmt.Errorf("jwk: failed to parse parameter oth[%d].d: %w", i, err)
-		}
-		t := new(big.Int).SetBytes(dataT)
+		d := new(big.Int).SetBytes(ctx.decode(v.D, "oth[].d"))
+		t := new(big.Int).SetBytes(ctx.decode(v.T, "oth[].t"))
 
 		crtValues = append(crtValues, rsa.CRTValue{
 			Exp:   d,
@@ -156,23 +121,9 @@ func (key *rsaPrivateKey) decode() error {
 
 	// precomputed values
 	if key.Dp != "" && key.Dq != "" && key.Qi != "" {
-		dataDp, err := base64.RawURLEncoding.DecodeString(key.Q)
-		if err != nil {
-			return fmt.Errorf("jwk: failed to parse parameter dp: %w", err)
-		}
-		dp := new(big.Int).SetBytes(dataDp)
-
-		dataDq, err := base64.RawURLEncoding.DecodeString(key.Q)
-		if err != nil {
-			return fmt.Errorf("jwk: failed to parse parameter dq: %w", err)
-		}
-		dq := new(big.Int).SetBytes(dataDq)
-
-		dataQi, err := base64.RawURLEncoding.DecodeString(key.Qi)
-		if err != nil {
-			return fmt.Errorf("jwk: failed to parse parameter qi: %w", err)
-		}
-		qi := new(big.Int).SetBytes(dataQi)
+		dp := new(big.Int).SetBytes(ctx.decode(key.Dp, "dp"))
+		dq := new(big.Int).SetBytes(ctx.decode(key.Dp, "dq"))
+		qi := new(big.Int).SetBytes(ctx.decode(key.Dp, "qi"))
 
 		key.privateKey.Precomputed = rsa.PrecomputedValues{
 			Dp:        dp,
@@ -182,7 +133,50 @@ func (key *rsaPrivateKey) decode() error {
 		}
 	}
 
+	if ctx.err != nil {
+		return ctx.err
+	}
 	return key.privateKey.Validate()
+}
+
+func (key *rsaPrivateKey) getContext() base64Context {
+	var size int
+	if len(key.E) > size {
+		size = len(key.E)
+	}
+	if len(key.N) > size {
+		size = len(key.N)
+	}
+	if len(key.D) > size {
+		size = len(key.D)
+	}
+	if len(key.P) > size {
+		size = len(key.P)
+	}
+	if len(key.Q) > size {
+		size = len(key.Q)
+	}
+	for _, v := range key.Oth {
+		if len(v.R) > size {
+			size = len(v.R)
+		}
+		if len(v.D) > size {
+			size = len(v.D)
+		}
+		if len(v.D) > size {
+			size = len(v.D)
+		}
+	}
+	if len(key.Dp) > size {
+		size = len(key.Dp)
+	}
+	if len(key.Dq) > size {
+		size = len(key.Dq)
+	}
+	if len(key.Qi) > size {
+		size = len(key.Qi)
+	}
+	return newBase64Context(size)
 }
 
 // RFC7518 6.3.1. Parameters for RSA Public Keys
@@ -231,21 +225,26 @@ func parseRSAPublicKey(data []byte) (Key, error) {
 
 // decode decodes the encoded values into publicKey.
 func (key *rsaPublicKey) decode() error {
-	dataE, err := base64.RawURLEncoding.DecodeString(key.E)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter e: %w", err)
-	}
+	ctx := key.getContext()
+
 	var e int
-	for _, v := range dataE {
+	for _, v := range ctx.decode(key.E, "e") {
 		e = (e << 8) | int(v)
 	}
 	key.publicKey.E = e
 
-	dataN, err := base64.RawURLEncoding.DecodeString(key.N)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter n: %w", err)
-	}
-	key.publicKey.N = new(big.Int).SetBytes(dataN)
+	key.publicKey.N = new(big.Int).SetBytes(ctx.decode(key.N, "n"))
 
-	return nil
+	return ctx.err
+}
+
+func (key *rsaPublicKey) getContext() base64Context {
+	var size int
+	if len(key.E) > size {
+		size = len(key.E)
+	}
+	if len(key.N) > size {
+		size = len(key.N)
+	}
+	return newBase64Context(size)
 }

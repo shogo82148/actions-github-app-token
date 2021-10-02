@@ -3,7 +3,6 @@ package jwk
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -79,25 +78,26 @@ func (key *ecdsaPrivateKey) decode() error {
 		return fmt.Errorf("jwk: unknown elliptic curve: %q", key.Crv)
 	}
 
-	dataX, err := base64.RawURLEncoding.DecodeString(key.X)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter x: %w", err)
-	}
-	key.privateKey.X = new(big.Int).SetBytes(dataX)
+	ctx := key.getContext()
+	key.privateKey.X = new(big.Int).SetBytes(ctx.decode(key.X, "x"))
+	key.privateKey.Y = new(big.Int).SetBytes(ctx.decode(key.Y, "y"))
+	key.privateKey.D = new(big.Int).SetBytes(ctx.decode(key.D, "d"))
 
-	dataY, err := base64.RawURLEncoding.DecodeString(key.Y)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter y: %w", err)
-	}
-	key.privateKey.Y = new(big.Int).SetBytes(dataY)
+	return ctx.err
+}
 
-	dataD, err := base64.RawURLEncoding.DecodeString(key.D)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter d: %w", err)
+func (key *ecdsaPrivateKey) getContext() base64Context {
+	var size int
+	if len(key.X) > size {
+		size = len(key.X)
 	}
-	key.privateKey.D = new(big.Int).SetBytes(dataD)
-
-	return nil
+	if len(key.Y) > size {
+		size = len(key.Y)
+	}
+	if len(key.D) > size {
+		size = len(key.D)
+	}
+	return newBase64Context(size)
 }
 
 // RFC7518 6.2.1. Parameters for Elliptic Curve Public Keys
@@ -162,17 +162,20 @@ func (key *ecdsaPublicKey) decode() error {
 		return fmt.Errorf("jwk: unknown elliptic curve: %q", key.Crv)
 	}
 
-	dataX, err := base64.RawURLEncoding.DecodeString(key.X)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter x: %w", err)
-	}
-	key.publicKey.X = new(big.Int).SetBytes(dataX)
+	ctx := key.getContext()
+	key.publicKey.X = new(big.Int).SetBytes(ctx.decode(key.X, "x"))
+	key.publicKey.Y = new(big.Int).SetBytes(ctx.decode(key.Y, "y"))
 
-	dataY, err := base64.RawURLEncoding.DecodeString(key.Y)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter y: %w", err)
-	}
-	key.publicKey.Y = new(big.Int).SetBytes(dataY)
+	return ctx.err
+}
 
-	return nil
+func (key *ecdsaPublicKey) getContext() base64Context {
+	var size int
+	if len(key.X) > size {
+		size = len(key.X)
+	}
+	if len(key.Y) > size {
+		size = len(key.Y)
+	}
+	return newBase64Context(size)
 }
