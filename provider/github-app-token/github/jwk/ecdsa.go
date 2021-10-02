@@ -162,17 +162,20 @@ func (key *ecdsaPublicKey) decode() error {
 		return fmt.Errorf("jwk: unknown elliptic curve: %q", key.Crv)
 	}
 
-	dataX, err := base64.RawURLEncoding.DecodeString(key.X)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter x: %w", err)
-	}
-	key.publicKey.X = new(big.Int).SetBytes(dataX)
-
-	dataY, err := base64.RawURLEncoding.DecodeString(key.Y)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter y: %w", err)
-	}
-	key.publicKey.Y = new(big.Int).SetBytes(dataY)
+	ctx := key.getContext()
+	key.publicKey.X = new(big.Int).SetBytes(ctx.decode(key.X, "x"))
+	key.publicKey.X = new(big.Int).SetBytes(ctx.decode(key.Y, "y"))
 
 	return nil
+}
+
+func (key *ecdsaPublicKey) getContext() base64Context {
+	var size int
+	if len(key.X) > size {
+		size = len(key.X)
+	}
+	if len(key.Y) > size {
+		size = len(key.Y)
+	}
+	return newBase64Context(size)
 }
