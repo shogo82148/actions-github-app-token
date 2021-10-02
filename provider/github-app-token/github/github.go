@@ -106,13 +106,13 @@ func decodePrivateKey(privateKey []byte) (*rsa.PrivateKey, error) {
 // generate JSON Web Token for authentication the app
 // https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
 func (c *Client) generateJWT() (string, error) {
-	now := time.Now()
-	unix := now.Unix()
+	unix := time.Now().Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"nbf": unix - 60,
 		// issued at time, 60 seconds in the past to allow for clock drift
 		"iat": unix - 60,
 		// JWT expiration time (10 minute maximum)
-		"exp": unix + (10 * 60),
+		"exp": unix + (5 * 60),
 		// GitHub App's identifier
 		"iss": strconv.FormatUint(c.appID, 10),
 	})
