@@ -2,7 +2,6 @@ package jwk
 
 import (
 	"crypto/ed25519"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -61,31 +60,36 @@ func (key *ed25519PrivateKey) PublicKey() interface{} {
 }
 
 func (key *ed25519PrivateKey) decode() error {
-	if base64.RawURLEncoding.DecodedLen(len(key.X)) != ed25519.PublicKeySize {
-		return fmt.Errorf("jwk: the parameter x has invalid size")
-	}
-	if base64.RawURLEncoding.DecodedLen(len(key.D)) != ed25519.PrivateKeySize-ed25519.PublicKeySize {
+	ctx := key.getContext()
+
+	privateKey := make([]byte, ed25519.PrivateKeySize)
+	data := ctx.decode(key.D, "d")
+	if len(data) != ed25519.PrivateKeySize-ed25519.PublicKeySize {
 		return fmt.Errorf("jwk: the parameter d has invalid size")
 	}
+	copy(privateKey, data)
 
-	publicKey := make([]byte, ed25519.PublicKeySize)
-	privateKey := make([]byte, ed25519.PrivateKeySize)
-
-	var err error
-	_, err = base64.RawURLEncoding.Decode(publicKey, []byte(key.X))
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter x: %w", err)
-	}
-	_, err = base64.RawURLEncoding.Decode(privateKey, []byte(key.D))
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter d: %w", err)
+	publicKey := ctx.decode(key.X, "x")
+	if len(publicKey) != ed25519.PublicKeySize {
+		return fmt.Errorf("jwk: the parameter x has invalid size")
 	}
 	copy(privateKey[32:], publicKey)
 
 	key.publicKey = ed25519.PublicKey(publicKey)
 	key.privateKey = ed25519.PrivateKey(privateKey)
 
-	return nil
+	return ctx.err
+}
+
+func (key *ed25519PrivateKey) getContext() base64Context {
+	var size int
+	if len(key.X) > size {
+		size = len(key.X)
+	}
+	if len(key.D) > size {
+		size = len(key.D)
+	}
+	return newBase64Context(size)
 }
 
 // RFC8037 2. Key Type "OKP"
@@ -132,15 +136,15 @@ func parseEd25519PublicKey(data []byte) (Key, error) {
 
 // decode decodes the encoded values into publicKey.
 func (key *ed25519PublicKey) decode() error {
-	if base64.RawURLEncoding.DecodedLen(len(key.X)) != ed25519.PublicKeySize {
+	ctx := key.getContext()
+	data := ctx.decode(key.X, "x")
+	if len(data) != ed25519.PublicKeySize {
 		return fmt.Errorf("jwk: the parameter x has invalid size")
 	}
-	x := []byte(key.X)
-	data := make([]byte, ed25519.PublicKeySize)
-	_, err := base64.RawURLEncoding.Decode(data, x)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter x: %w", err)
-	}
 	key.publicKey = ed25519.PublicKey(data)
-	return nil
+	return ctx.err
+}
+
+func (key *ed25519PublicKey) getContext() base64Context {
+	return newBase64Context(len(key.X))
 }
