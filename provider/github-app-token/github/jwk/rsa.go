@@ -231,21 +231,26 @@ func parseRSAPublicKey(data []byte) (Key, error) {
 
 // decode decodes the encoded values into publicKey.
 func (key *rsaPublicKey) decode() error {
-	dataE, err := base64.RawURLEncoding.DecodeString(key.E)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter e: %w", err)
-	}
+	ctx := key.getContext()
+
 	var e int
-	for _, v := range dataE {
+	for _, v := range ctx.decode(key.E, "e") {
 		e = (e << 8) | int(v)
 	}
 	key.publicKey.E = e
 
-	dataN, err := base64.RawURLEncoding.DecodeString(key.N)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter n: %w", err)
-	}
-	key.publicKey.N = new(big.Int).SetBytes(dataN)
+	key.publicKey.N = new(big.Int).SetBytes(ctx.decode(key.N, "n"))
 
-	return nil
+	return ctx.err
+}
+
+func (key *rsaPublicKey) getContext() base64Context {
+	var size int
+	if len(key.E) > size {
+		size = len(key.E)
+	}
+	if len(key.N) > size {
+		size = len(key.N)
+	}
+	return newBase64Context(size)
 }
