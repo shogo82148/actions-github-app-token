@@ -164,7 +164,7 @@ func (key *ecdsaPublicKey) decode() error {
 
 	ctx := key.getContext()
 	key.publicKey.X = new(big.Int).SetBytes(ctx.decode(key.X, "x"))
-	key.publicKey.X = new(big.Int).SetBytes(ctx.decode(key.Y, "y"))
+	key.publicKey.Y = new(big.Int).SetBytes(ctx.decode(key.Y, "y"))
 
 	return nil
 }
