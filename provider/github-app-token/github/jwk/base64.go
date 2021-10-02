@@ -11,6 +11,7 @@ type base64Context struct {
 	err error
 }
 
+// newBase64Context pre-allocates base64 decoding buffers.
 func newBase64Context(n int) base64Context {
 	src := make([]byte, n)
 	dst := make([]byte, base64.RawURLEncoding.DecodedLen(n))
@@ -20,6 +21,8 @@ func newBase64Context(n int) base64Context {
 	}
 }
 
+// decode decodes s as base64 raw url encoding.
+// the returned slice is valid until next call.
 func (ctx *base64Context) decode(s string, name string) []byte {
 	src := ctx.src[:len(s)]
 	copy(src, s)
