@@ -22,6 +22,7 @@ func newBase64Context(n int) base64Context {
 
 func (ctx *base64Context) decode(s string, name string) []byte {
 	src := ctx.src[:len(s)]
+	copy(src, s)
 	n, err := base64.RawURLEncoding.Decode(ctx.dst, src)
 	if err != nil && ctx.err != nil {
 		ctx.err = fmt.Errorf("jwk: failed to parse the parameter %s: %w", name, err)
