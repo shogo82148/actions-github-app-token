@@ -31,7 +31,7 @@ func TestGetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := config.Issuer, "https://vstoken.actions.githubusercontent.com"; got != want {
+	if got, want := config.Issuer, "https://token.actions.githubusercontent.com"; got != want {
 		t.Errorf("unexpected issuer: want %q, got %q", want, got)
 	}
 }

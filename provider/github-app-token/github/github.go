@@ -26,10 +26,10 @@ const (
 	// The default url of Github API
 	defaultAPIBaseURL = "https://api.github.com"
 
-	oidcIssuer = "https://vstoken.actions.githubusercontent.com"
+	oidcIssuer = "https://token.actions.githubusercontent.com"
 )
 
-// The thumbprint of the certificate for https://vstoken.actions.githubusercontent.com
+// The thumbprint of the certificate for https://token.actions.githubusercontent.com
 var oidcThumbprints = []string{"a031c46782e6e6c662c2c87c76da9aa62ccabd8e"}
 
 var apiBaseURL string
