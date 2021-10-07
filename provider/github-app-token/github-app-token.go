@@ -18,6 +18,9 @@ import (
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 )
 
+// the sentinel error that the token is not GITHUB_TOKEN
+var errNotGitHubToken = errors.New("githubapptoken: the token is not GITHUB_TOKEN")
+
 type githubClient interface {
 	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error)
@@ -155,21 +158,27 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	}
 
 	// authorize the request
+	var err error
 	var owner, repo string
-	if id, err := h.github.ParseIDToken(ctx, token); err == nil {
+	err = h.validateGitHubToken(ctx, token, req)
+	if err == nil {
+		owner, repo, err = splitOwnerRepo(req.Repository)
+		if err != nil {
+			return nil, err
+		}
+	} else if errors.Is(err, errNotGitHubToken) {
+		id, err := h.github.ParseIDToken(ctx, token)
+		if err != nil {
+			return nil, &validationError{
+				message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
+			}
+		}
 		owner, repo, err = splitOwnerRepo(id.Repository)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := h.validateGitHubToken(ctx, token, req)
-		if err != nil {
-			return nil, err
-		}
-		owner, repo, err = splitOwnerRepo(req.Repository)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	// issue a new access token
@@ -293,10 +302,8 @@ func (h *Handler) validateGitHubToken(ctx context.Context, token string, req *re
 			message: "GITHUB_TOKEN looks like GitHub App refresh token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.",
 		}
 	default:
-		// Old Format Personal Access Tokens
-		return &validationError{
-			message: "GITHUB_TOKEN looks like Personal Access Token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.",
-		}
+		// it doesn't look a GitHub token.
+		return errNotGitHubToken
 	}
 	resp, err := h.updateCommitStatus(ctx, token, req, &github.CreateStatusRequest{
 		State:       github.CommitStateSuccess,
