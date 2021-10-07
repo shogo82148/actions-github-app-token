@@ -83,9 +83,11 @@ export async function assumeRole(params: GetTokenParams) {
   let token: string;
   if (isIdTokenAvailable()) {
     token = await core.getIDToken(params.audience);
+    core.info(`JWT issued by ${params.audience} is available.`);
   } else {
     validateGitHubToken(params.githubToken);
     token = params.githubToken;
+    core.info("GitHub Token is available.");
   }
   headers["Authorization"] = `Bearer ${token}`;
 
