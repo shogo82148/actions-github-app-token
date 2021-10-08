@@ -26,10 +26,10 @@ const (
 	// The default url of Github API
 	defaultAPIBaseURL = "https://api.github.com"
 
-	oidcIssuer = "https://vstoken.actions.githubusercontent.com"
+	oidcIssuer = "https://token.actions.githubusercontent.com"
 )
 
-// The thumbprint of the certificate for https://vstoken.actions.githubusercontent.com
+// The thumbprint of the certificate for https://token.actions.githubusercontent.com
 var oidcThumbprints = []string{"a031c46782e6e6c662c2c87c76da9aa62ccabd8e"}
 
 var apiBaseURL string
@@ -106,13 +106,13 @@ func decodePrivateKey(privateKey []byte) (*rsa.PrivateKey, error) {
 // generate JSON Web Token for authentication the app
 // https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
 func (c *Client) generateJWT() (string, error) {
-	now := time.Now()
-	unix := now.Unix()
+	unix := time.Now().Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"nbf": unix - 60,
 		// issued at time, 60 seconds in the past to allow for clock drift
 		"iat": unix - 60,
 		// JWT expiration time (10 minute maximum)
-		"exp": unix + (10 * 60),
+		"exp": unix + (5 * 60),
 		// GitHub App's identifier
 		"iss": strconv.FormatUint(c.appID, 10),
 	})

@@ -125,7 +125,7 @@ func (key *commonKey) PublicKey() interface{} {
 
 func (key *commonKey) decode() error {
 	// decode the certificates
-	certs := make([]*x509.Certificate, len(key.X5c))
+	certs := make([]*x509.Certificate, 0, len(key.X5c))
 	for _, der := range key.X5c {
 		cert, err := x509.ParseCertificate(der)
 		if err != nil {
@@ -169,21 +169,45 @@ func (key *commonKey) decode() error {
 // ParseKey parses a JWK.
 func ParseKey(data []byte) (Key, error) {
 	var hint struct {
-		Kty string          `json:"kty"`
-		D   json.RawMessage `json:"d"`
+		Kty string   `json:"kty"`
+		Crv string   `json:"crv"`
+		D   hasValue `json:"d"`
 	}
 
 	if err := json.Unmarshal(data, &hint); err != nil {
 		return nil, err
 	}
 	switch hint.Kty {
+	case "EC":
+		if hint.D {
+			return parseEcdsaPrivateKey(data)
+		} else {
+			return parseEcdsaPublicKey(data)
+		}
 	case "RSA":
-		if len(hint.D) > 0 {
+		if hint.D {
 			return parseRSAPrivateKey(data)
 		} else {
 			return parseRSAPublicKey(data)
 		}
+	case "OKP":
+		if hint.D {
+			return parseOkpPrivateKey(data, hint.Crv)
+		} else {
+			return parseOkpPublicKey(data, hint.Crv)
+		}
+	case "oct":
+		return parseSymmetricKey(data)
 	default:
 		return nil, fmt.Errorf("jwk: unknown key type: %s", hint.Kty)
 	}
+}
+
+// hasValue checks a JSON string has the specific key.
+// it don't parse the value.
+type hasValue bool
+
+func (v *hasValue) UnmarshalJSON(data []byte) error {
+	*v = true
+	return nil
 }
