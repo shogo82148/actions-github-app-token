@@ -64,10 +64,12 @@ async function assumeRole(params) {
     let token;
     if (isIdTokenAvailable()) {
         token = await core.getIDToken(params.audience);
+        core.info(`JWT issued by ${params.audience} is available.`);
     }
     else {
         validateGitHubToken(params.githubToken);
         token = params.githubToken;
+        core.info("GitHub Token is available.");
     }
     headers["Authorization"] = `Bearer ${token}`;
     const client = new http.HttpClient("actions-github-app-token");
