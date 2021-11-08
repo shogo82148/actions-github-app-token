@@ -3,7 +3,7 @@ module github.com/shogo82148/actions-github-app-token/provider/github-app-token
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.10.0
+	github.com/aws/aws-sdk-go-v2 v1.11.0
 	github.com/aws/aws-sdk-go-v2/config v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.13.0
 	github.com/golang-jwt/jwt/v4 v4.1.0
@@ -18,6 +18,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.8.0 // indirect
-	github.com/aws/smithy-go v1.8.1 // indirect
+	github.com/aws/smithy-go v1.9.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 )
