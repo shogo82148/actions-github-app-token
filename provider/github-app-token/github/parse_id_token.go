@@ -33,8 +33,9 @@ type ActionsIDToken struct {
 	BaseRef         string `json:"base_ref,omitempty"`
 	EventName       string `json:"event_name,omitempty"`
 	EventType       string `json:"branch,omitempty"`
-	JobWorkflowRef  string `json:"job_workflow_ref,omitempty"`
+	RefType         string `json:"ref_type,omitempty"`
 	Environment     string `json:"environment,omitempty"`
+	JobWorkflowRef  string `json:"job_workflow_ref,omitempty"`
 }
 
 func (c *Client) ParseIDToken(ctx context.Context, idToken string) (*ActionsIDToken, error) {
