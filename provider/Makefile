@@ -11,7 +11,7 @@ deploy:
 .PHONY: cicd
 cicd:
 	aws cloudformation deploy \
-		--region ap-northeast-1 \
+		--region us-east-1 \
 		--stack-name "github-app-token-cicd" \
 		--template-file "cicd.yaml" \
 		--capabilities CAPABILITY_NAMED_IAM
