@@ -2,9 +2,6 @@ package oidc
 
 import (
 	"context"
-	"crypto/sha1"
-	"crypto/subtle"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,11 +24,6 @@ func (c *Client) GetJWKS(ctx context.Context, url string) (*jwk.Set, error) {
 	}
 	defer resp.Body.Close()
 
-	// verify the certificate
-	if err := c.verifyCertificate(resp); err != nil {
-		return nil, err
-	}
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("oidc: unexpected response code: %d", resp.StatusCode)
 	}
@@ -42,22 +34,4 @@ func (c *Client) GetJWKS(ctx context.Context, url string) (*jwk.Set, error) {
 	}
 
 	return jwk.ParseSet(data)
-}
-
-func (c *Client) verifyCertificate(resp *http.Response) error {
-	if resp.TLS == nil {
-		return errors.New("oidc: jwks url is not encrypted")
-	}
-	certs := resp.TLS.PeerCertificates
-	if len(certs) == 0 {
-		return errors.New("oidc: the server certificate is not found")
-	}
-	cert := certs[len(certs)-1]
-	sum := sha1.Sum(cert.Raw)
-	for _, want := range c.thumbprints {
-		if subtle.ConstantTimeCompare(sum[:], want) != 0 {
-			return nil
-		}
-	}
-	return errors.New("oidc: invalid server certificate")
 }
