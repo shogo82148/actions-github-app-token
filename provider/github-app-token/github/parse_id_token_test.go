@@ -28,7 +28,7 @@ func TestParseIDToken_Intergrated(t *testing.T) {
 	}
 	t.Logf("the id is issued at %s", time.Now())
 
-	oidcClient, err := oidc.NewClient(http.DefaultClient, oidcIssuer, oidcThumbprints)
+	oidcClient, err := oidc.NewClient(http.DefaultClient, oidcIssuer)
 	if err != nil {
 		t.Fatal(err)
 	}
