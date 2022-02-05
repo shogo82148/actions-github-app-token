@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -25,31 +24,18 @@ type Doer interface {
 }
 
 type Client struct {
-	httpClient  Doer
-	issuer      string
-	thumbprints [][]byte
+	httpClient Doer
+	issuer     string
 }
 
-func NewClient(httpClient Doer, issuer string, thumbprints []string) (*Client, error) {
-	// https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc_verify-thumbprint.html
-	// decode thumbprints
-	decoded := make([][]byte, 0, len(thumbprints))
-	for _, thumb := range thumbprints {
-		data, err := hex.DecodeString(thumb)
-		if err != nil {
-			return nil, fmt.Errorf("oidc: failed to parse thumbprints: %w", err)
-		}
-		decoded = append(decoded, data)
-	}
-
+func NewClient(httpClient Doer, issuer string) (*Client, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
 	return &Client{
-		httpClient:  httpClient,
-		issuer:      issuer,
-		thumbprints: decoded,
+		httpClient: httpClient,
+		issuer:     issuer,
 	}, nil
 }
 

@@ -22,7 +22,7 @@ func TestGetConfig(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c, err := NewClient(ts.Client(), ts.URL, []string{})
+	c, err := NewClient(ts.Client(), ts.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
