@@ -2,13 +2,14 @@ package memoize
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 )
 
-func TestCall(t *testing.T) {
+func TestDo(t *testing.T) {
 	ttl := time.Second
 	now := time.Unix(1234567890, 0)
 	nowFunc = func() time.Time {
@@ -21,6 +22,8 @@ func TestCall(t *testing.T) {
 		calls++
 		return calls, now.Add(ttl), nil
 	}
+
+	// first call
 	got, err := g.Do(context.Background(), "foobar", fn)
 	if err != nil {
 		t.Fatal(err)
@@ -29,7 +32,7 @@ func TestCall(t *testing.T) {
 		t.Errorf("want 1, got %d", got)
 	}
 
-	// the cache is still available, Func should not be called.
+	// the cache is still available, fn should not be called.
 	now = now.Add(ttl - 1)
 
 	got, err = g.Do(context.Background(), "foobar", fn)
@@ -40,7 +43,7 @@ func TestCall(t *testing.T) {
 		t.Errorf("want 1, got %d", got)
 	}
 
-	// the cache is expired, so Func should be called.
+	// the cache is expired, so fn should be called.
 	now = now.Add(1)
 
 	got, err = g.Do(context.Background(), "foobar", fn)
@@ -49,6 +52,20 @@ func TestCall(t *testing.T) {
 	}
 	if got != 2 {
 		t.Errorf("want 2, got %d", got)
+	}
+}
+
+func TestDoErr(t *testing.T) {
+	var g Group[string, any]
+	someErr := errors.New("Some error")
+	v, err := g.Do(context.Background(), "key", func(ctx context.Context) (interface{}, time.Time, error) {
+		return nil, time.Time{}, someErr
+	})
+	if err != someErr {
+		t.Errorf("Do error = %v; want someErr %v", err, someErr)
+	}
+	if v != nil {
+		t.Errorf("unexpected non-nil value %#v", v)
 	}
 }
 
