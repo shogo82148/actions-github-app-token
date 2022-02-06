@@ -164,7 +164,12 @@ func TestDoCancel(t *testing.T) {
 	}
 
 	cancel1() // cancel goroutine 1
-	<-ch1     // goroutine 1 should be canceled
+	select {
+	case <-ch1:
+		// goroutine 1 should be canceled
+	case <-time.After(time.Second):
+		t.Fatalf("Do hangs")
+	}
 
 	// other goroutines are still blocked
 	select {
@@ -178,6 +183,16 @@ func TestDoCancel(t *testing.T) {
 	cancel2() // cancel goroutine 2
 
 	// now all goroutines are canceled
-	<-ch2
-	<-ch
+	select {
+	case <-ch2:
+		// goroutine 1 should be canceled
+	case <-time.After(time.Second):
+		t.Fatalf("Do hangs")
+	}
+	select {
+	case <-ch:
+		// goroutine 1 should be canceled
+	case <-time.After(time.Second):
+		t.Fatalf("Do hangs")
+	}
 }
