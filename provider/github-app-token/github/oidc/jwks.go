@@ -12,6 +12,9 @@ import (
 
 func (c *Client) GetJWKS(ctx context.Context, url string) (*jwk.Set, error) {
 	return c.jwks.Do(ctx, url, func(ctx context.Context) (*jwk.Set, time.Time, error) {
+		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+
 		// some providers, such as GitHub Actions, returns "cache-control: no-store,no-cache".
 		// but I think I can cache them.
 		now := time.Now()
