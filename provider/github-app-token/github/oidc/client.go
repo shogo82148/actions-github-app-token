@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/jwk"
+	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/memoize"
 )
 
 const (
@@ -26,6 +28,8 @@ type Doer interface {
 type Client struct {
 	httpClient Doer
 	issuer     string
+	oidcConfig memoize.Group[string, *Config]
+	jwks       memoize.Group[string, *jwk.Set]
 }
 
 func NewClient(httpClient Doer, issuer string) (*Client, error) {
