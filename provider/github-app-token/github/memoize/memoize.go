@@ -75,6 +75,7 @@ func (g *Group[K, V]) Do(ctx context.Context, key K, fn func(ctx context.Context
 		c.runs--
 		if c.runs == 0 {
 			c.cancel()
+			e.call = nil // to avoid adding new channels to c.chans
 		}
 		g.mu.Unlock()
 		var zero V
@@ -83,16 +84,15 @@ func (g *Group[K, V]) Do(ctx context.Context, key K, fn func(ctx context.Context
 }
 
 func do[K comparable, V any](g *Group[K, V], e *entry[V], c *call[V], key K, fn func(ctx context.Context) (V, time.Time, error)) {
-	// call g.Func
 	v, expiresAt, err := fn(c.ctx)
 	ret := result[V]{
 		val: v,
 		err: err,
 	}
 
-	// save the cache
+	// save to the cache
 	g.mu.Lock()
-	e.call = nil
+	e.call = nil // to avoid adding new channels to c.chans
 	chans := c.chans
 	if err == nil {
 		e.val = v
