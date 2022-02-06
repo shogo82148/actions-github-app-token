@@ -16,13 +16,12 @@ func TestCall(t *testing.T) {
 	}
 
 	var calls int
-	memo := &Memo[string, int]{
-		Func: func(ctx context.Context, key string) (int, time.Time, error) {
-			calls++
-			return calls, now.Add(ttl), nil
-		},
+	var g Group[string, int]
+	fn := func(ctx context.Context) (int, time.Time, error) {
+		calls++
+		return calls, now.Add(ttl), nil
 	}
-	got, err := memo.Call(context.Background(), "foobar")
+	got, err := g.Do(context.Background(), "foobar", fn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +32,7 @@ func TestCall(t *testing.T) {
 	// the cache is still available, Func should not be called.
 	now = now.Add(ttl - 1)
 
-	got, err = memo.Call(context.Background(), "foobar")
+	got, err = g.Do(context.Background(), "foobar", fn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +43,7 @@ func TestCall(t *testing.T) {
 	// the cache is expired, so Func should be called.
 	now = now.Add(1)
 
-	got, err = memo.Call(context.Background(), "foobar")
+	got, err = g.Do(context.Background(), "foobar", fn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,22 +53,21 @@ func TestCall(t *testing.T) {
 }
 
 func TestDoDupSuppress(t *testing.T) {
+	var g Group[string, string]
 	var wg1, wg2 sync.WaitGroup
 	c := make(chan string, 1)
 	var calls int32
-	g := Memo[string, string]{
-		Func: func(ctx context.Context, key string) (string, time.Time, error) {
-			if atomic.AddInt32(&calls, 1) == 1 {
-				// First invocation.
-				wg1.Done()
-			}
-			v := <-c
-			c <- v // pump; make available for any future calls
+	fn := func(ctx context.Context) (string, time.Time, error) {
+		if atomic.AddInt32(&calls, 1) == 1 {
+			// First invocation.
+			wg1.Done()
+		}
+		v := <-c
+		c <- v // pump; make available for any future calls
 
-			time.Sleep(10 * time.Millisecond) // let more goroutines enter Do
+		time.Sleep(10 * time.Millisecond) // let more goroutines enter Do
 
-			return v, time.Time{}, nil
-		},
+		return v, time.Time{}, nil
 	}
 
 	const n = 10
@@ -80,7 +78,7 @@ func TestDoDupSuppress(t *testing.T) {
 		go func() {
 			defer wg2.Done()
 			wg1.Done()
-			v, err := g.Call(context.Background(), "key")
+			v, err := g.Do(context.Background(), "key", fn)
 			if err != nil {
 				t.Errorf("Do error: %v", err)
 				return
