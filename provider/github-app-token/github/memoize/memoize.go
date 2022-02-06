@@ -84,6 +84,8 @@ func (g *Group[K, V]) Do(ctx context.Context, key K, fn func(ctx context.Context
 }
 
 func do[K comparable, V any](g *Group[K, V], e *entry[V], c *call[V], key K, fn func(ctx context.Context) (V, time.Time, error)) {
+	defer c.cancel()
+
 	v, expiresAt, err := fn(c.ctx)
 	ret := result[V]{
 		val: v,
