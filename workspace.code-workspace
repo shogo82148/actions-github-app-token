@@ -9,6 +9,9 @@
 		{
 			"path": "provider",
 		},
+		{
+			"path": ".github",
+		},
 	],
 	"settings": {
 		"editor.formatOnSave": true,
