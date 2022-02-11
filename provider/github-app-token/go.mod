@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/config v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.20.0
-	github.com/golang-jwt/jwt/v4 v4.2.0
+	github.com/golang-jwt/jwt/v4 v4.3.0
 	github.com/shogo82148/ridgenative v1.1.1
 )
 
