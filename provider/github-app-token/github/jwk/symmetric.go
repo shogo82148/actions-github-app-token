@@ -30,7 +30,7 @@ func parseSymmetricKey(data []byte) (Key, error) {
 	return &key, nil
 }
 
-func (key *symmetricKey) PrivateKey() interface{} {
+func (key *symmetricKey) PrivateKey() any {
 	return key.key
 }
 

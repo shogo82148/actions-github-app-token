@@ -42,11 +42,11 @@ type Key interface {
 
 	// PrivateKey returns the private key.
 	// If the key doesn't contain any private key, it returns nil.
-	PrivateKey() interface{}
+	PrivateKey() any
 
 	// PublicKey returns the public key.
 	// If the key doesn't contain any public key, it returns nil.
-	PublicKey() interface{}
+	PublicKey() any
 }
 
 type commonKey struct {
@@ -115,11 +115,11 @@ func (key *commonKey) X509CertificateSHA256() string {
 	return key.X5tS256
 }
 
-func (key *commonKey) PrivateKey() interface{} {
+func (key *commonKey) PrivateKey() any {
 	return nil
 }
 
-func (key *commonKey) PublicKey() interface{} {
+func (key *commonKey) PublicKey() any {
 	return nil
 }
 

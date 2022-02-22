@@ -28,11 +28,11 @@ type ecdsaPrivateKey struct {
 	privateKey ecdsa.PrivateKey
 }
 
-func (key *ecdsaPrivateKey) PrivateKey() interface{} {
+func (key *ecdsaPrivateKey) PrivateKey() any {
 	return &key.privateKey
 }
 
-func (key *ecdsaPrivateKey) PublicKey() interface{} {
+func (key *ecdsaPrivateKey) PublicKey() any {
 	return &key.privateKey.PublicKey
 }
 
@@ -116,7 +116,7 @@ type ecdsaPublicKey struct {
 	publicKey ecdsa.PublicKey
 }
 
-func (key *ecdsaPublicKey) PublicKey() interface{} {
+func (key *ecdsaPublicKey) PublicKey() any {
 	return &key.publicKey
 }
 

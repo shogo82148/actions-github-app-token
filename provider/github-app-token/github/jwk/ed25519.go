@@ -51,11 +51,11 @@ func parseEd25519PrivateKey(data []byte) (Key, error) {
 	return &key, nil
 }
 
-func (key *ed25519PrivateKey) PrivateKey() interface{} {
+func (key *ed25519PrivateKey) PrivateKey() any {
 	return key.privateKey
 }
 
-func (key *ed25519PrivateKey) PublicKey() interface{} {
+func (key *ed25519PrivateKey) PublicKey() any {
 	return key.publicKey
 }
 
@@ -103,7 +103,7 @@ type ed25519PublicKey struct {
 	publicKey ed25519.PublicKey
 }
 
-func (key *ed25519PublicKey) PublicKey() interface{} {
+func (key *ed25519PublicKey) PublicKey() any {
 	return key.publicKey
 }
 
