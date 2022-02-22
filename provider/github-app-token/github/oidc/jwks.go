@@ -29,10 +29,10 @@ func (c *Client) GetJWKS(ctx context.Context, url string) (*jwk.Set, error) {
 		if err != nil {
 			return nil, time.Time{}, err
 		}
-		req.Header.Set("User-Agent", httpUserAgent)
+		req.Header.Set("User-Agent", c.userAgent)
 		req.Header.Set("Accept", "application/jwk-set+json")
 
-		resp, err := c.httpClient.Do(req)
+		resp, err := c.doer.Do(req)
 		if err != nil {
 			return nil, time.Time{}, err
 		}

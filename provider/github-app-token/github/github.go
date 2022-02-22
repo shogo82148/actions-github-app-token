@@ -66,7 +66,11 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
-	oidcClient, err := oidc.NewClient(httpClient, oidcIssuer)
+	oidcClient, err := oidc.NewClient(&oidc.ClientConfig{
+		Doer:      httpClient,
+		Issuer:    oidcIssuer,
+		UserAgent: githubUserAgent,
+	})
 	if err != nil {
 		return nil, err
 	}
