@@ -44,7 +44,7 @@ func NewClient(httpClient Doer, issuer string) (*Client, error) {
 }
 
 func (c *Client) ParseWithClaims(ctx context.Context, tokenString string, claims jwt.Claims) (*jwt.Token, error) {
-	return jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	return jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		now := time.Now()
 
 		// get JSON Web Key Set

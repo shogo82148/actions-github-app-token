@@ -77,11 +77,11 @@ func parseRSAPrivateKey(data []byte) (Key, error) {
 	return &key, nil
 }
 
-func (key *rsaPrivateKey) PrivateKey() interface{} {
+func (key *rsaPrivateKey) PrivateKey() any {
 	return &key.privateKey
 }
 
-func (key *rsaPrivateKey) PublicKey() interface{} {
+func (key *rsaPrivateKey) PublicKey() any {
 	return &key.privateKey.PublicKey
 }
 
@@ -192,7 +192,7 @@ type rsaPublicKey struct {
 	publicKey rsa.PublicKey
 }
 
-func (key *rsaPublicKey) PublicKey() interface{} {
+func (key *rsaPublicKey) PublicKey() any {
 	return &key.publicKey
 }
 
