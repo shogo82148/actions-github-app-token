@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	// The value of User-Agent header
-	httpUserAgent = "actions-github-token/1.0"
+	// The default value of User-Agent header
+	defaultUserAgent = "oidc-client/1.0"
 )
 
 // Doer is a interface for doing an http request.
@@ -25,21 +25,35 @@ type Doer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+type ClientConfig struct {
+	Doer      Doer
+	Issuer    string
+	UserAgent string
+}
+
 type Client struct {
-	httpClient Doer
+	doer       Doer
 	issuer     string
+	userAgent  string
 	oidcConfig memoize.Group[string, *Config]
 	jwks       memoize.Group[string, *jwk.Set]
 }
 
-func NewClient(httpClient Doer, issuer string) (*Client, error) {
-	if httpClient == nil {
-		httpClient = http.DefaultClient
+func NewClient(config *ClientConfig) (*Client, error) {
+	doer := config.Doer
+	if doer == nil {
+		doer = http.DefaultClient
+	}
+	issuer := config.Issuer
+	userAgent := config.UserAgent
+	if userAgent == "" {
+		userAgent = defaultUserAgent
 	}
 
 	return &Client{
-		httpClient: httpClient,
-		issuer:     issuer,
+		doer:      doer,
+		issuer:    issuer,
+		userAgent: userAgent,
 	}, nil
 }
 

@@ -43,11 +43,11 @@ func (c *Client) GetConfig(ctx context.Context) (*Config, error) {
 		if err != nil {
 			return nil, time.Time{}, err
 		}
-		req.Header.Set("User-Agent", httpUserAgent)
+		req.Header.Set("User-Agent", c.userAgent)
 		req.Header.Set("Accept", "application/json")
 
 		// send the request
-		resp, err := c.httpClient.Do(req)
+		resp, err := c.doer.Do(req)
 		if err != nil {
 			return nil, time.Time{}, err
 		}
