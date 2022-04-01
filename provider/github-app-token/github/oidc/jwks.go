@@ -49,7 +49,7 @@ func (c *Client) GetJWKS(ctx context.Context, url string) (*jwk.Set, error) {
 
 		set, err := jwk.ParseSet(data)
 		if err != nil {
-
+			return nil, time.Time{}, err
 		}
 		return set, expiresAt, nil
 	})
