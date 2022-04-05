@@ -21,7 +21,7 @@ jobs:
           go-version: "1.18"
 
       - name: restore cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
@@ -36,7 +36,7 @@ jobs:
 
   action:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 5
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -54,7 +54,7 @@ jobs:
           go-version: "1.18"
 
       - name: restore cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
