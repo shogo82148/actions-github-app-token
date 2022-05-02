@@ -15,3 +15,9 @@ updates:
     directory: "/provider/github-app-token"
     schedule:
       interval: "daily"
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
