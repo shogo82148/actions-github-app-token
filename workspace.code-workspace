@@ -27,6 +27,7 @@
 			"jwks",
 			"JWKSURI",
 			"oidc"
-		]
+		],
+		"makefile.extensionOutputFolder": "./.vscode"
 	}
 }
