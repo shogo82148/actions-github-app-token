@@ -3,7 +3,7 @@ module github.com/shogo82148/actions-github-app-token/provider/github-app-token
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.16.3
+	github.com/aws/aws-sdk-go-v2 v1.16.4
 	github.com/aws/aws-sdk-go-v2/config v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.27.0
 	github.com/golang-jwt/jwt/v4 v4.4.1
