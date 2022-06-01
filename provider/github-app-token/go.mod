@@ -7,11 +7,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.15.9
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.27.1
 	github.com/golang-jwt/jwt/v4 v4.4.1
-	github.com/shogo82148/ridgenative v1.2.0
+	github.com/shogo82148/ridgenative v1.2.1
 )
 
 require (
-	github.com/aws/aws-lambda-go v1.30.0 // indirect
+	github.com/aws/aws-lambda-go v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.11 // indirect
@@ -22,5 +22,4 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.6 // indirect
 	github.com/aws/smithy-go v1.11.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0 // indirect
 )
