@@ -12,7 +12,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/jwk"
-	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/memoize"
+	"github.com/shogo82148/memoize"
 )
 
 const (

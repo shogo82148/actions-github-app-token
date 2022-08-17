@@ -22,4 +22,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.13 // indirect
 	github.com/aws/smithy-go v1.12.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/shogo82148/memoize v0.0.1 // indirect
 )
