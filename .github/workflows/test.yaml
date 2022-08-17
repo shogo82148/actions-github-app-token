@@ -18,16 +18,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: "1.18"
-
-      - name: restore cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
-      - name: download dependencies
-        run: go mod download
-        working-directory: provider/github-app-token
+          cache: true
+          go-version-file: provider/github-app-token/go.mod
+          cache-dependency-path: provider/github-app-token/go.sum
 
       - name: Test
         run: |
@@ -51,17 +44,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: "1.18"
-
-      - name: restore cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
-
-      - name: download dependencies
-        run: go mod download
-        working-directory: provider/github-app-token
+          cache: true
+          go-version-file: provider/github-app-token/go.mod
+          cache-dependency-path: provider/github-app-token/go.sum
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
