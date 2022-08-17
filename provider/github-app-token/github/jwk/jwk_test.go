@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rsa"
+	"errors"
 	"reflect"
 	"testing"
 )
@@ -476,6 +477,116 @@ func BenchmarkKey_RFC8037AppendixA(b *testing.B) {
 			`"x":"11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"}`)
 		for i := 0; i < b.N; i++ {
 			ParseKey(rawKey)
+		}
+	})
+}
+
+func TestKey_Base64Error(t *testing.T) {
+	t.Run("EC Private Key", func(t *testing.T) {
+		rawKey := `{"kty":"EC",` +
+			`"crv":"P-256",` +
+			`"x":"!!!INVALID BASE64!!!",` +
+			`"y":"!!!INVALID BASE64!!!",` +
+			`"use":"enc",` +
+			`"kid":"1"}`
+		var e *base64DecodeError
+		_, err := ParseKey([]byte(rawKey))
+		if !errors.As(err, &e) {
+			t.Errorf("want *base64DecodeError, got %T", err)
+		}
+		if e.err == nil {
+			t.Error("want not nil, got nil")
+		}
+		if e.name != "x" && e.name != "y" {
+			t.Errorf("want name is x or y, got %s", e.name)
+		}
+	})
+
+	t.Run("RFC 7517 A.2. Example Private Keys (EC)", func(t *testing.T) {
+		rawKey := `{"kty":"EC",` +
+			`"crv":"P-256",` +
+			`"x":"!!!INVALID BASE64!!!",` +
+			`"y":"!!!INVALID BASE64!!!",` +
+			`"d":"!!!INVALID BASE64!!!",` +
+			`"use":"enc",` +
+			`"kid":"1"}`
+		var e *base64DecodeError
+		_, err := ParseKey([]byte(rawKey))
+		if !errors.As(err, &e) {
+			t.Errorf("want *base64DecodeError, got %T", err)
+		}
+		if e.err == nil {
+			t.Error("want not nil, got nil")
+		}
+		if e.name != "x" && e.name != "y" && e.name != "d" {
+			t.Errorf("want name is x or y or d, got %s", e.name)
+		}
+	})
+
+	t.Run("RSA Public Key", func(t *testing.T) {
+		rawKey := `{"kty":"RSA",` +
+			`"n":"!!!INVALID BASE64!!!",` +
+			`"e":"!!!INVALID BASE64!!!",` +
+			`"alg":"RS256",` +
+			`"kid":"2011-04-29"}`
+		var e *base64DecodeError
+		_, err := ParseKey([]byte(rawKey))
+		if !errors.As(err, &e) {
+			t.Errorf("want *base64DecodeError, got %T", err)
+		}
+		if e.err == nil {
+			t.Error("want not nil, got nil")
+		}
+		if e.name != "n" && e.name != "e" {
+			t.Errorf("want name is n or e, got %s", e.name)
+		}
+	})
+
+	t.Run("Symmetric Keys (HMAC)", func(t *testing.T) {
+		rawKey := `{"kty":"oct","k":"!!!INVALID BASE64!!!"}`
+		var e *base64DecodeError
+		_, err := ParseKey([]byte(rawKey))
+		if !errors.As(err, &e) {
+			t.Errorf("want *base64DecodeError, got %T", err)
+		}
+		if e.err == nil {
+			t.Error("want not nil, got nil")
+		}
+		if e.name != "k" {
+			t.Errorf("want name is k, got %s", e.name)
+		}
+	})
+
+	t.Run("Ed25519 Public Key", func(t *testing.T) {
+		rawKey := `{"kty":"OKP","crv":"Ed25519",` +
+			`"x":"!!!INVALID BASE64!!!"}`
+		var e *base64DecodeError
+		_, err := ParseKey([]byte(rawKey))
+		if !errors.As(err, &e) {
+			t.Errorf("want *base64DecodeError, got %T", err)
+		}
+		if e.err == nil {
+			t.Error("want not nil, got nil")
+		}
+		if e.name != "x" {
+			t.Errorf("want name is x, got %s", e.name)
+		}
+	})
+
+	t.Run("Ed25519 Private Key", func(t *testing.T) {
+		rawKey := `{"kty":"OKP","crv":"Ed25519",` +
+			`"d":"!!!INVALID BASE64!!!",` +
+			`"x":"!!!INVALID BASE64!!!"}`
+		var e *base64DecodeError
+		_, err := ParseKey([]byte(rawKey))
+		if !errors.As(err, &e) {
+			t.Errorf("want *base64DecodeError, got %T", err)
+		}
+		if e.err == nil {
+			t.Error("want not nil, got nil")
+		}
+		if e.name != "d" && e.name != "x" {
+			t.Errorf("want name is d or x, got %s", e.name)
 		}
 	})
 }
