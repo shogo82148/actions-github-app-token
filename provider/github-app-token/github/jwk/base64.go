@@ -27,8 +27,25 @@ func (ctx *base64Context) decode(s string, name string) []byte {
 	src := ctx.src[:len(s)]
 	copy(src, s)
 	n, err := base64.RawURLEncoding.Decode(ctx.dst, src)
-	if err != nil && ctx.err != nil {
-		ctx.err = fmt.Errorf("jwk: failed to parse the parameter %s: %w", name, err)
+	if err != nil && ctx.err == nil {
+		ctx.err = &base64DecodeError{
+			name: name,
+			err:  err,
+		}
 	}
 	return ctx.dst[:n]
+}
+
+type base64DecodeError struct {
+	name string
+	err  error
+}
+
+// Error implements the error interface.
+func (err *base64DecodeError) Error() string {
+	return fmt.Sprintf("jwk: failed to parse the parameter %s: %v", err.name, err.err)
+}
+
+func (err *base64DecodeError) Unwrap() error {
+	return err.err
 }
