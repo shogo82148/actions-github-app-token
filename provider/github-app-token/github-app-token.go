@@ -65,7 +65,7 @@ func NewHandler() (*Handler, error) {
 
 	privateKeyParam, err := svc.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(os.Getenv("GITHUB_PRIVATE_KEY")),
-		WithDecryption: true,
+		WithDecryption: aws.Bool(true),
 	})
 	if err != nil {
 		return nil, err
