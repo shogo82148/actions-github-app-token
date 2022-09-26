@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/aws/aws-sdk-go-v2 v1.16.16
 	github.com/aws/aws-sdk-go-v2/config v1.17.7
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.29.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/shogo82148/memoize v0.0.2
 	github.com/shogo82148/ridgenative v1.2.1
