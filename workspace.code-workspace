@@ -28,7 +28,8 @@
 			"jwks",
 			"JWKSURI",
 			"oidc",
-			"rawurl"
+			"rawurl",
+			"testdata"
 		],
 		"makefile.extensionOutputFolder": "./.vscode"
 	}

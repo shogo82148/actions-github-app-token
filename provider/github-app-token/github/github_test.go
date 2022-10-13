@@ -1,6 +1,11 @@
 package github
 
-import "testing"
+import (
+	"os"
+	"testing"
+
+	"github.com/shogo82148/goat/jwk"
+)
 
 func TestCanonicalURL(t *testing.T) {
 	cases := []struct {
@@ -62,4 +67,12 @@ func TestCanonicalURL(t *testing.T) {
 			t.Errorf("%d: canonicalURL(%q) should be %q, but got %q", i, c.input, c.want, got)
 		}
 	}
+}
+
+func readPublicKeyForTest() (*jwk.Key, error) {
+	data, err := os.ReadFile("testdata/id_rsa_pub.json")
+	if err != nil {
+		return nil, err
+	}
+	return jwk.ParseKey(data)
 }

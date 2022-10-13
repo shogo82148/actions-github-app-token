@@ -45,12 +45,7 @@ func TestParseIDToken_Integrated(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("sub: %s", id.Subject)
-	t.Logf("job_workflow_ref: %s", id.JobWorkflowRef)
-	t.Logf("aud: %s", id.Audience)
-	t.Logf("issued at %s", id.IssuedAt)
-	t.Logf("not before %s", id.NotBefore)
-	t.Logf("expires at %s", id.ExpirationTime)
+	t.Logf("raw: %#v", id.Raw)
 
 	if got, want := id.Actor, os.Getenv("GITHUB_ACTOR"); got != want {
 		t.Errorf("unexpected actor: want %q, got %q", want, got)
