@@ -2,72 +2,57 @@ package github
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"time"
 
-	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/oidc"
+	"github.com/shogo82148/goat/jws"
+	"github.com/shogo82148/goat/jwt"
+	"github.com/shogo82148/goat/sig"
 )
 
+// GitHub's custom claims
 type ActionsIDToken struct {
-	// common jwt parameters
-	Audience  string            `json:"aud,omitempty"`
-	ExpiresAt *oidc.NumericDate `json:"exp,omitempty"`
-	Id        string            `json:"jti,omitempty"`
-	IssuedAt  *oidc.NumericDate `json:"iat,omitempty"`
-	Issuer    string            `json:"iss,omitempty"`
-	NotBefore *oidc.NumericDate `json:"nbf,omitempty"`
-	Subject   string            `json:"sub,omitempty"`
-
-	// GitHub's extara parameters
-	Ref             string `json:"ref,omitempty"`
-	SHA             string `json:"sha,omitempty"`
-	Repository      string `json:"repository,omitempty"`
-	RepositoryOwner string `json:"repository_owner,omitempty"`
-	RunID           string `json:"run_id,omitempty"`
-	RunNumber       string `json:"run_number,omitempty"`
-	RunAttempt      string `json:"run_attempt,omitempty"`
-	Actor           string `json:"actor,omitempty"`
-	Workflow        string `json:"workflow,omitempty"`
-	HeadRef         string `json:"head_ref,omitempty"`
-	BaseRef         string `json:"base_ref,omitempty"`
-	EventName       string `json:"event_name,omitempty"`
-	EventType       string `json:"branch,omitempty"`
-	RefType         string `json:"ref_type,omitempty"`
-	Environment     string `json:"environment,omitempty"`
-	JobWorkflowRef  string `json:"job_workflow_ref,omitempty"`
+	*jwt.Claims
+	Ref             string `jwt:"ref"`
+	SHA             string `jwt:"sha"`
+	Repository      string `jwt:"repository"`
+	RepositoryOwner string `jwt:"repository_owner"`
+	RunID           string `jwt:"run_id"`
+	RunNumber       string `jwt:"run_number"`
+	RunAttempt      string `jwt:"run_attempt"`
+	Actor           string `jwt:"actor"`
+	Workflow        string `jwt:"workflow"`
+	HeadRef         string `jwt:"head_ref"`
+	BaseRef         string `jwt:"base_ref"`
+	EventName       string `jwt:"event_name"`
+	EventType       string `jwt:"branch"`
+	RefType         string `jwt:"ref_type"`
+	Environment     string `jwt:"environment"`
+	JobWorkflowRef  string `jwt:"job_workflow_ref"`
 }
 
 func (c *Client) ParseIDToken(ctx context.Context, idToken string) (*ActionsIDToken, error) {
-	var claims ActionsIDToken
-	_, err := c.oidcClient.ParseWithClaims(ctx, idToken, &claims)
+	set, err := c.oidcClient.GetJWKS(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("github: failed to get JWK Set: %w", err)
 	}
+	token, err := jwt.Parse([]byte(idToken), jwt.FindKeyFunc(func(header *jws.Header) (key sig.SigningKey, err error) {
+		jwk, ok := set.Find(header.KeyID())
+		if !ok {
+			return nil, fmt.Errorf("github: kid %s is not found", header.KeyID())
+		}
+		if jwk.Algorithm() != "" && header.Algorithm().KeyAlgorithm() != jwk.Algorithm() {
+			return nil, fmt.Errorf("github: alg parameter mismatch")
+		}
+		key = header.Algorithm().New().NewSigningKey(jwk)
+		return
+	}))
+	if err != nil {
+		return nil, fmt.Errorf("github: failed to parse id token: %w", err)
+	}
+	var claims ActionsIDToken
+	if err := token.Claims.DecodeCustom(&claims); err != nil {
+		return nil, fmt.Errorf("github: failed to parse id token: %w", err)
+	}
+	claims.Claims = token.Claims
 	return &claims, nil
-}
-
-func (token *ActionsIDToken) Valid() error {
-	now := time.Now()
-
-	if token.Issuer != oidcIssuer {
-		return fmt.Errorf("github: unexpected issuer: %q", token.Issuer)
-	}
-
-	if token.ExpiresAt == nil {
-		return errors.New("github: the exp (expires at) parameter is not set")
-	}
-	if token.ExpiresAt.Before(now) {
-		return errors.New("github: the token is already expired")
-	}
-
-	if token.NotBefore == nil {
-		return errors.New("github: the nbf (not before) paremeter is not set")
-	}
-
-	if now.Before(token.NotBefore.Time) {
-		return errors.New("github: the token is not valid yet")
-	}
-
-	return nil
 }

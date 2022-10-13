@@ -24,9 +24,12 @@
 			"github-app-token": true
 		},
 		"cSpell.words": [
+			"HTMLURL",
 			"jwks",
 			"JWKSURI",
-			"oidc"
+			"oidc",
+			"rawurl",
+			"testdata"
 		],
 		"makefile.extensionOutputFolder": "./.vscode"
 	}

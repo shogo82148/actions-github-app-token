@@ -28,7 +28,7 @@ type CreateAppAccessTokenRequestPermissions struct {
 	SecurityEvents     string `json:"security_events,omitempty"`
 	Statuses           string `json:"statuses,omitempty"`
 
-	// omit other fields, we don't permmit them.
+	// omit other fields, we don't use them.
 }
 
 type CreateAppAccessTokenResponse struct {
