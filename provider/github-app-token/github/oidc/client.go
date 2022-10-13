@@ -5,18 +5,19 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/jwk"
+	"github.com/shogo82148/memoize"
 )
 
 const (
-	// The value of User-Agent header
-	httpUserAgent = "actions-github-token/1.0"
+	// The default value of User-Agent header
+	defaultUserAgent = "oidc-client/1.0"
 )
 
 // Doer is a interface for doing an http request.
@@ -24,37 +25,40 @@ type Doer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-type Client struct {
-	httpClient  Doer
-	issuer      string
-	thumbprints [][]byte
+type ClientConfig struct {
+	Doer      Doer
+	Issuer    string
+	UserAgent string
 }
 
-func NewClient(httpClient Doer, issuer string, thumbprints []string) (*Client, error) {
-	// https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc_verify-thumbprint.html
-	// decode thumbprints
-	decoded := make([][]byte, 0, len(thumbprints))
-	for _, thumb := range thumbprints {
-		data, err := hex.DecodeString(thumb)
-		if err != nil {
-			return nil, fmt.Errorf("oidc: failed to parse thumbprints: %w", err)
-		}
-		decoded = append(decoded, data)
-	}
+type Client struct {
+	doer       Doer
+	issuer     string
+	userAgent  string
+	oidcConfig memoize.Group[string, *Config]
+	jwks       memoize.Group[string, *jwk.Set]
+}
 
-	if httpClient == nil {
-		httpClient = http.DefaultClient
+func NewClient(config *ClientConfig) (*Client, error) {
+	doer := config.Doer
+	if doer == nil {
+		doer = http.DefaultClient
+	}
+	issuer := config.Issuer
+	userAgent := config.UserAgent
+	if userAgent == "" {
+		userAgent = defaultUserAgent
 	}
 
 	return &Client{
-		httpClient:  httpClient,
-		issuer:      issuer,
-		thumbprints: decoded,
+		doer:      doer,
+		issuer:    issuer,
+		userAgent: userAgent,
 	}, nil
 }
 
 func (c *Client) ParseWithClaims(ctx context.Context, tokenString string, claims jwt.Claims) (*jwt.Token, error) {
-	return jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	return jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		now := time.Now()
 
 		// get JSON Web Key Set

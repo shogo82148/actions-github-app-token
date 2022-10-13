@@ -51,29 +51,34 @@ func parseEd25519PrivateKey(data []byte) (Key, error) {
 	return &key, nil
 }
 
-func (key *ed25519PrivateKey) PrivateKey() interface{} {
+func (key *ed25519PrivateKey) PrivateKey() any {
 	return key.privateKey
 }
 
-func (key *ed25519PrivateKey) PublicKey() interface{} {
+func (key *ed25519PrivateKey) PublicKey() any {
 	return key.publicKey
 }
 
 func (key *ed25519PrivateKey) decode() error {
+	const keySize = ed25519.PrivateKeySize - ed25519.PublicKeySize
 	ctx := key.getContext()
 
 	privateKey := make([]byte, ed25519.PrivateKeySize)
 	data := ctx.decode(key.D, "d")
-	if len(data) != ed25519.PrivateKeySize-ed25519.PublicKeySize {
+	if ctx.err != nil {
+		return ctx.err
+	}
+	if copy(privateKey, data) != keySize {
 		return fmt.Errorf("jwk: the parameter d has invalid size")
 	}
-	copy(privateKey, data)
 
 	publicKey := ctx.decode(key.X, "x")
-	if len(publicKey) != ed25519.PublicKeySize {
+	if ctx.err != nil {
+		return ctx.err
+	}
+	if copy(privateKey[keySize:], publicKey) != ed25519.PublicKeySize {
 		return fmt.Errorf("jwk: the parameter x has invalid size")
 	}
-	copy(privateKey[32:], publicKey)
 
 	key.publicKey = ed25519.PublicKey(publicKey)
 	key.privateKey = ed25519.PrivateKey(privateKey)
@@ -103,7 +108,7 @@ type ed25519PublicKey struct {
 	publicKey ed25519.PublicKey
 }
 
-func (key *ed25519PublicKey) PublicKey() interface{} {
+func (key *ed25519PublicKey) PublicKey() any {
 	return key.publicKey
 }
 
@@ -138,11 +143,14 @@ func parseEd25519PublicKey(data []byte) (Key, error) {
 func (key *ed25519PublicKey) decode() error {
 	ctx := key.getContext()
 	data := ctx.decode(key.X, "x")
+	if ctx.err != nil {
+		return ctx.err
+	}
 	if len(data) != ed25519.PublicKeySize {
 		return fmt.Errorf("jwk: the parameter x has invalid size")
 	}
 	key.publicKey = ed25519.PublicKey(data)
-	return ctx.err
+	return nil
 }
 
 func (key *ed25519PublicKey) getContext() base64Context {

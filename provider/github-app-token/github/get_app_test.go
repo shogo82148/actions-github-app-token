@@ -45,7 +45,7 @@ func TestGetApp(t *testing.T) {
 			return
 		}
 		auth = strings.TrimPrefix(auth, "Bearer ")
-		token, err := jwt.Parse(auth, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(auth, func(token *jwt.Token) (any, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}

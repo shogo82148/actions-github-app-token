@@ -16,11 +16,10 @@ func ParseSet(data []byte) (*Set, error) {
 
 	list := make([]Key, 0, len(keys.Keys))
 	for _, raw := range keys.Keys {
-		key, err := ParseKey(raw)
-		if err != nil {
-			return nil, err
+		if key, err := ParseKey(raw); err == nil {
+			list = append(list, key)
+			// Ignore keys that cannot be parsed.
 		}
-		list = append(list, key)
 	}
 	return &Set{
 		Keys: list,

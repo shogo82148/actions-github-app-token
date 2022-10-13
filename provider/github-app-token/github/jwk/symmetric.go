@@ -1,9 +1,7 @@
 package jwk
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 )
 
 // RFC7518 6.4. Parameters for Symmetric Keys
@@ -30,17 +28,17 @@ func parseSymmetricKey(data []byte) (Key, error) {
 	return &key, nil
 }
 
-func (key *symmetricKey) PrivateKey() interface{} {
+func (key *symmetricKey) PrivateKey() any {
 	return key.key
 }
 
 // decode decodes the encoded values into publicKey.
 func (key *symmetricKey) decode() error {
-	k, err := base64.RawURLEncoding.DecodeString(key.K)
-	if err != nil {
-		return fmt.Errorf("jwk: failed to parse parameter k: %w", err)
-	}
-	key.key = k
+	ctx := key.getContext()
+	key.key = ctx.decode(key.K, "k")
+	return ctx.err
+}
 
-	return nil
+func (key *symmetricKey) getContext() base64Context {
+	return newBase64Context(len(key.K))
 }

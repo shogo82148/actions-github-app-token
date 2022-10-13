@@ -9,6 +9,9 @@
 		{
 			"path": "provider",
 		},
+		{
+			"path": ".github",
+		},
 	],
 	"settings": {
 		"editor.formatOnSave": true,
@@ -24,6 +27,7 @@
 			"jwks",
 			"JWKSURI",
 			"oidc"
-		]
+		],
+		"makefile.extensionOutputFolder": "./.vscode"
 	}
 }

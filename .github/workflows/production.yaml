@@ -1,0 +1,46 @@
+name: deploy to production
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      statuses: write
+      contents: read
+    environment: production
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          cache: true
+          go-version-file: provider/github-app-token/go.mod
+          cache-dependency-path: provider/github-app-token/go.sum
+
+      - name: build
+        run: |
+          make build
+        working-directory: provider
+
+      - uses: fuller-inc/actions-aws-assume-role@v1
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::978218332026:role/github-app-token-github-actions-us-east-1
+          role-session-tagging: true
+          use-node-id: true
+
+      - name: deploy
+        run: |
+          make deploy
+        working-directory: provider
