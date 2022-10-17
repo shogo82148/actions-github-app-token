@@ -1,9 +1,7 @@
 package github
 
 import (
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"net"
@@ -85,7 +83,7 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 	}
 
 	if privateKey != nil {
-		key, err := decodePrivateKey(privateKey)
+		key, _, err := jwk.DecodePEM(privateKey)
 		if err != nil {
 			return nil, err
 		}
@@ -93,25 +91,6 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 	}
 
 	return c, nil
-}
-
-func decodePrivateKey(privateKey []byte) (*jwk.Key, error) {
-	block, _ := pem.Decode(privateKey)
-	if block == nil {
-		return nil, errors.New("github: no key found")
-	}
-	if block.Type != "RSA PRIVATE KEY" {
-		return nil, fmt.Errorf("github: unsupported key type %q", block.Type)
-	}
-
-	rsaPrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	key := new(jwk.Key)
-	key.SetPrivateKey(rsaPrivateKey)
-	return key, nil
 }
 
 // generate JSON Web Token for authentication the app
