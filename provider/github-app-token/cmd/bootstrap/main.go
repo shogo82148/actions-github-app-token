@@ -2,10 +2,10 @@ package main
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	githubapptoken "github.com/shogo82148/actions-github-app-token/provider/github-app-token"
+	log "github.com/shogo82148/ctxlog"
 	"github.com/shogo82148/ridgenative"
 )
 
