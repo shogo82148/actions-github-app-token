@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # v3.3.1
         with:
           cache: true
           go-version-file: provider/github-app-token/go.mod
@@ -33,7 +33,7 @@ jobs:
           make build
         working-directory: provider
 
-      - uses: fuller-inc/actions-aws-assume-role@v1
+      - uses: fuller-inc/actions-aws-assume-role@ee49a108ae9920a17c4abf0931f30935fea2d2b0 # v1.5.3
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::978218332026:role/github-app-token-github-actions-us-east-1
