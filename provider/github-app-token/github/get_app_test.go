@@ -2,9 +2,6 @@ package github
 
 import (
 	"context"
-	"crypto/x509"
-	"encoding/pem"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,23 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/shogo82148/goat/jwa"
+	"github.com/shogo82148/goat/jws"
+	"github.com/shogo82148/goat/jwt"
+	"github.com/shogo82148/goat/sig"
 )
 
 func TestGetApp(t *testing.T) {
 	privateKey, err := os.ReadFile("./testdata/id_rsa_for_testing")
-	if err != nil {
-		t.Fatal(err)
-	}
-	block, _ := pem.Decode(privateKey)
-	if block == nil {
-		t.Fatal("no key found")
-	}
-	if block.Type != "RSA PRIVATE KEY" {
-		t.Fatalf("unsupported key type: %q", block.Type)
-	}
-
-	rsaPrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,19 +33,23 @@ func TestGetApp(t *testing.T) {
 			return
 		}
 		auth = strings.TrimPrefix(auth, "Bearer ")
-		token, err := jwt.Parse(auth, func(token *jwt.Token) (any, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		token, err := jwt.Parse([]byte(auth), jwt.FindKeyFunc(func(header *jws.Header) (sig.SigningKey, error) {
+			if want, got := jwa.RS256, header.Algorithm(); want != got {
+				t.Errorf("unexpected algorithm: want %s, got %s", want, got)
 			}
-			return &rsaPrivateKey.PublicKey, nil
-		})
+			key, err := readPublicKeyForTest()
+			if err != nil {
+				return nil, err
+			}
+			return jwa.RS256.New().NewSigningKey(key), nil
+		}))
 		if err != nil {
 			t.Error(err)
 			rw.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		claims := token.Claims.(jwt.MapClaims)
-		iss := claims["iss"].(string)
+		claims := token.Claims
+		iss := claims.Issuer
 		if iss != "123456" {
 			t.Errorf("unexpected issuer: want %q, got %q", "123456", iss)
 		}

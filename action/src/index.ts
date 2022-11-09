@@ -127,7 +127,8 @@ async function run() {
     const githubToken = core.getInput("github-token", required);
     const providerEndpoint =
       core.getInput("provider-endpoint") || "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
-    const audience = core.getInput("audience", { required: false });
+    const audience = core.getInput("audience", { required: false }) ||
+      "github.com/shogo82148/actions-github-app-token";
 
     await assumeRole({
       githubToken,

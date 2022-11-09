@@ -1,10 +1,7 @@
 package github
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"net"
@@ -15,8 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github/oidc"
+	"github.com/shogo82148/goat/jwa"
+	_ "github.com/shogo82148/goat/jwa/rs" // for RS256
+	"github.com/shogo82148/goat/jwk"
+	"github.com/shogo82148/goat/jws"
+	"github.com/shogo82148/goat/jwt"
+	"github.com/shogo82148/goat/oidc"
 )
 
 const (
@@ -55,8 +56,8 @@ type Client struct {
 	httpClient Doer
 
 	// configure for GitHub App
-	appID         uint64
-	rsaPrivateKey *rsa.PrivateKey
+	appID      uint64
+	privateKey *jwk.Key
 
 	// configure for OpenID Connect
 	oidcClient *oidc.Client
@@ -82,42 +83,34 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 	}
 
 	if privateKey != nil {
-		key, err := decodePrivateKey(privateKey)
+		key, _, err := jwk.DecodePEM(privateKey)
 		if err != nil {
 			return nil, err
 		}
-		c.rsaPrivateKey = key
+		c.privateKey = key
 	}
 
 	return c, nil
 }
 
-func decodePrivateKey(privateKey []byte) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(privateKey)
-	if block == nil {
-		return nil, errors.New("github: no key found")
-	}
-	if block.Type != "RSA PRIVATE KEY" {
-		return nil, fmt.Errorf("github: unsupported key type %q", block.Type)
-	}
-
-	return x509.ParsePKCS1PrivateKey(block.Bytes)
-}
-
 // generate JSON Web Token for authentication the app
 // https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
 func (c *Client) generateJWT() (string, error) {
-	unix := time.Now().Unix()
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"nbf": unix - 60,
-		// issued at time, 60 seconds in the past to allow for clock drift
-		"iat": unix - 60,
-		// JWT expiration time (10 minute maximum)
-		"exp": unix + (5 * 60),
-		// GitHub App's identifier
-		"iss": strconv.FormatUint(c.appID, 10),
-	})
-	return token.SignedString(c.rsaPrivateKey)
+	now := time.Now().Truncate(time.Second)
+	header := new(jws.Header)
+	header.SetAlgorithm(jwa.RS256)
+	claims := &jwt.Claims{
+		NotBefore:      now.Add(-60 * time.Second),
+		IssuedAt:       now.Add(-60 * time.Second),
+		ExpirationTime: now.Add(5 * time.Minute),
+		Issuer:         strconv.FormatUint(c.appID, 10),
+	}
+	key := jwa.RS256.New().NewSigningKey(c.privateKey)
+	token, err := jwt.Sign(header, claims, key)
+	if err != nil {
+		return "", err
+	}
+	return string(token), nil
 }
 
 func (c *Client) ValidateAPIURL(url string) error {
