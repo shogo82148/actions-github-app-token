@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
+	"github.com/shogo82148/aws-xray-yasdk-go/xray"
+	log "github.com/shogo82148/ctxlog"
 )
 
 // the sentinel error that the token is not GITHUB_TOKEN
@@ -119,34 +120,40 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+	traceID := xray.ContextTraceID(ctx)
+	ctx = log.With(ctx, log.Fields{
+		"amzn_trace_id": traceID,
+	})
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		h.handleError(w, r, fmt.Errorf("failed to read the request body: %w", err))
+		h.handleError(ctx, w, r, fmt.Errorf("failed to read the request body: %w", err))
 		return
 	}
 	var payload *requestBody
 	if err := json.Unmarshal(data, &payload); err != nil {
-		h.handleError(w, r, &validationError{
+		h.handleError(ctx, w, r, &validationError{
 			message: fmt.Sprintf("failed to unmarshal the request body: %v", err),
 		})
 		return
 	}
 	token, err := h.getAuthToken(r.Header)
 	if err != nil {
-		h.handleError(w, r, err)
+		h.handleError(ctx, w, r, err)
 		return
 	}
 
 	resp, err := h.handle(ctx, token, payload)
 	if err != nil {
-		h.handleError(w, r, err)
+		h.handleError(ctx, w, r, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Printf("failed to write the response: %v", err)
+		log.Error(ctx, "failed to write the response", log.Fields{
+			"error": err.Error(),
+		})
 	}
 }
 
@@ -211,8 +218,8 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	}, nil
 }
 
-func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Println(err)
+func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
+	log.Error(ctx, err.Error(), nil)
 	status := http.StatusInternalServerError
 	var body *errorResponseBody
 

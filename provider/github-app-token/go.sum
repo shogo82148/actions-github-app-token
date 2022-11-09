@@ -37,6 +37,10 @@ github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGw
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/shogo82148/aws-xray-yasdk-go v1.5.1 h1:d+EZmBnXamabs/1QCUC5Xc2SRSak2exkq206f1J+Ze4=
+github.com/shogo82148/aws-xray-yasdk-go v1.5.1/go.mod h1:Bm0kmPLtYUWUAo9jmTnAhdz4wKY5xlO+ZHZTGpKwLJo=
+github.com/shogo82148/ctxlog v0.1.0 h1:WN1kcHxnFFPrqMNKK+ZM8GKrjqAKQymWekjeq6EZ7ao=
+github.com/shogo82148/ctxlog v0.1.0/go.mod h1:1vzyF5O3lITc5QGi4oYH12DwupLpZytmfxdN2vH1ZZ0=
 github.com/shogo82148/goat v0.0.5 h1:65yM5gti7Ey7hAF8ZsDHw2zuCaviwvESLrPzyrbK2kM=
 github.com/shogo82148/goat v0.0.5/go.mod h1:pcmnSPlJ3NS2klZNaT06i8Xq2mD+S2yqF1ITfa/+WN4=
 github.com/shogo82148/memoize v0.0.2 h1:KBHGjTpwuKPyCzpNlpNT79hKfmJaheHxpIuqdGzqdIE=
