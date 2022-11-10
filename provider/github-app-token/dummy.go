@@ -2,10 +2,9 @@ package githubapptoken
 
 import (
 	"context"
-	"errors"
-	"net/http"
 
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
+	"github.com/shogo82148/goat/jwt"
 )
 
 type githubClientDummy struct{}
@@ -13,19 +12,6 @@ type githubClientDummy struct{}
 func (c *githubClientDummy) GetApp(ctx context.Context) (*github.GetAppResponse, error) {
 	return &github.GetAppResponse{
 		HTMLURL: "https://github.com/shogo82148/actions-github-app-token",
-	}, nil
-}
-
-func (c *githubClientDummy) CreateStatus(ctx context.Context, token, owner, repo, ref string, status *github.CreateStatusRequest) (*github.CreateStatusResponse, error) {
-	if token != "ghs_dummyGitHubToken" || owner != "shogo82148" || repo != "actions-aws-assume-role" || ref != "e3a45c6c16c1464826b36a598ff39e6cc98c4da4" {
-		return nil, &github.ErrUnexpectedStatusCode{StatusCode: http.StatusBadRequest}
-	}
-	return &github.CreateStatusResponse{
-		Creator: &github.CreateStatusResponseCreator{
-			Login: "github-actions[bot]",
-			ID:    41898282,
-			Type:  "Bot",
-		},
 	}, nil
 }
 
@@ -46,11 +32,17 @@ func (c *githubClientDummy) ValidateAPIURL(url string) error {
 }
 
 func (c *githubClientDummy) ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error) {
-	return nil, errors.New("invalid jwt")
+	return &github.ActionsIDToken{
+		Claims: &jwt.Claims{
+			Audience: []string{"https://github-app.shogo82148.com/1234567890"},
+		},
+		Repository: "shogo82148/actions-github-app-token",
+	}, nil
 }
 
 func NewDummyHandler() *Handler {
 	return &Handler{
 		github: &githubClientDummy{},
+		appID:  1234567890,
 	}
 }
