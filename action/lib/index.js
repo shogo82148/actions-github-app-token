@@ -26,29 +26,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.assumeRole = void 0;
 const core = __importStar(require("@actions/core"));
 const http = __importStar(require("@actions/http-client"));
-function validateGitHubToken(token) {
-    if (token.length < 4) {
-        throw new Error("GITHUB_TOKEN has invalid format");
-    }
-    switch (token.substring(0, 4)) {
-        case "ghp_":
-            // Personal Access Tokens
-            throw new Error("GITHUB_TOKEN looks like Personal Access Token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.");
-        case "gho_":
-            // OAuth Access tokens
-            throw new Error("GITHUB_TOKEN looks like OAuth Access token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.");
-        case "ghu_":
-            // GitHub App user-to-server tokens
-            throw new Error("GITHUB_TOKEN looks like GitHub App user-to-server token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.");
-        case "ghs_":
-            // GitHub App server-to-server tokens
-            return; // it's OK
-        case "ghr_":
-            throw new Error("GITHUB_TOKEN looks like GitHub App refresh token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.");
-    }
-    // maybe Old Format Personal Access Tokens
-    throw new Error("GITHUB_TOKEN looks like Personal Access Token. `github-token` must be `${{ github.token }}` or `${{ secrets.GITHUB_TOKEN }}`.");
-}
 function assertIsDefined(val) {
     if (val === undefined || val === null) {
         throw new Error(`Missing required environment value. Are you running in GitHub Actions?`);
@@ -65,16 +42,10 @@ async function assumeRole(params) {
         sha: GITHUB_SHA,
     };
     const headers = {};
-    let token;
-    if (isIdTokenAvailable()) {
-        token = await core.getIDToken(params.audience);
-        core.info(`JWT issued by ${params.audience} is available.`);
+    if (!isIdTokenAvailable()) {
+        core.error(`OIDC provider is not available. please enable it. see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect`);
     }
-    else {
-        validateGitHubToken(params.githubToken);
-        token = params.githubToken;
-        core.info("GitHub Token is available.");
-    }
+    const token = await core.getIDToken(params.audience);
     headers["Authorization"] = `Bearer ${token}`;
     const client = new http.HttpClient("actions-github-app-token");
     const result = await client.postJson(params.providerEndpoint, payload, headers);
@@ -102,16 +73,13 @@ function isIdTokenAvailable() {
 }
 async function run() {
     const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
-    const defaultAudience = "https://github.com/shogo82148/actions-github-app-token";
+    const defaultAppID = "136245";
+    const audiencePrefix = "https://github-app.shogo82148.com/";
     try {
-        const required = {
-            required: true,
-        };
-        const githubToken = core.getInput("github-token", required);
         const providerEndpoint = core.getInput("provider-endpoint") || defaultProviderEndpoint;
-        const audience = core.getInput("audience", { required: false }) || defaultAudience;
+        const appID = core.getInput("app-id") || defaultAppID;
+        const audience = audiencePrefix + appID;
         await assumeRole({
-            githubToken,
             providerEndpoint,
             audience,
         });
