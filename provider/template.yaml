@@ -46,3 +46,4 @@ Resources:
             ParameterName: !Join ["", !Split ["^/", !Sub "^${AppId}"]]
         - SSMParameterReadPolicy:
             ParameterName: !Join ["", !Split ["^/", !Sub "^${PrivateKey}"]]
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess

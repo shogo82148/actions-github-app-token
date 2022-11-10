@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 	"github.com/shogo82148/aws-xray-yasdk-go/xray"
+	"github.com/shogo82148/aws-xray-yasdk-go/xrayhttp"
 	log "github.com/shogo82148/ctxlog"
 )
 
@@ -67,7 +68,8 @@ func NewHandler() (*Handler, error) {
 	}
 	privateKey := []byte(aws.ToString(privateKeyParam.Parameter.Value))
 
-	c, err := github.NewClient(nil, appID, privateKey)
+	client := xrayhttp.Client(http.DefaultClient)
+	c, err := github.NewClient(client, appID, privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +171,9 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		}
 	}
 	if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
-		return nil, fmt.Errorf("invalid audience: %v", id.Audience)
+		return nil, &validationError{
+			message: fmt.Sprintf("invalid audience: %v", id.Audience),
+		}
 	}
 	owner, repo, err = splitOwnerRepo(id.Repository)
 	if err != nil {
