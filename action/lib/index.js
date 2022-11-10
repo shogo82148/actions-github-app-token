@@ -101,14 +101,15 @@ function isIdTokenAvailable() {
     return token && url ? true : false;
 }
 async function run() {
+    const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
+    const defaultAudience = "https://github.com/shogo82148/actions-github-app-token";
     try {
         const required = {
             required: true,
         };
         const githubToken = core.getInput("github-token", required);
-        const providerEndpoint = core.getInput("provider-endpoint") || "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
-        const audience = core.getInput("audience", { required: false }) ||
-            "github.com/shogo82148/actions-github-app-token";
+        const providerEndpoint = core.getInput("provider-endpoint") || defaultProviderEndpoint;
+        const audience = core.getInput("audience", { required: false }) || defaultAudience;
         await assumeRole({
             githubToken,
             providerEndpoint,
