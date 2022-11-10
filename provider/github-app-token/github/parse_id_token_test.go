@@ -65,7 +65,7 @@ func getIdToken(ctx context.Context, idToken, idURL string) (string, error) {
 		return "", err
 	}
 	q := u.Query()
-	q.Set("audience", "https://github.com/shogo82148/actions-github-app-token")
+	q.Set("audience", "https://github.com/shogo82148/another-app")
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
