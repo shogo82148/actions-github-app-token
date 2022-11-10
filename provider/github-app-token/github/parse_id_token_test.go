@@ -63,7 +63,7 @@ func TestParseIDToken_Integrated(t *testing.T) {
 
 	t.Run("custom audience", func(t *testing.T) {
 		t.Logf("the request started at %s", time.Now())
-		token, err := getIdToken(ctx, "https://example.com", idToken, idURL)
+		token, err := getIdToken(ctx, "https://github.com/apps/shogo82148-slim", idToken, idURL)
 		if err != nil {
 			t.Fatal(err)
 		}

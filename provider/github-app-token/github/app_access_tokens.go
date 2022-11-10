@@ -38,7 +38,7 @@ type CreateAppAccessTokenResponse struct {
 }
 
 // CreateAppAccessToken creates an installation access token for the app
-// https://docs.github.com/en/rest/reference/apps#create-an-installation-access-token-for-an-app
+// https://docs.github.com/en/rest/apps/apps#create-an-installation-access-token-for-an-app
 func (c *Client) CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *CreateAppAccessTokenRequest) (*CreateAppAccessTokenResponse, error) {
 	token, err := c.generateJWT()
 	if err != nil {
