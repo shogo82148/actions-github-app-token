@@ -121,7 +121,7 @@ function isIdTokenAvailable(): boolean {
 
 async function run() {
   const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
-  const defaultAudience = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com";
+  const defaultAudience = "https://github-app.shogo82148.com/136245";
   try {
     const required = {
       required: true,
