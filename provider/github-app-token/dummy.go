@@ -43,5 +43,6 @@ func (c *githubClientDummy) ParseIDToken(ctx context.Context, idToken string) (*
 func NewDummyHandler() *Handler {
 	return &Handler{
 		github: &githubClientDummy{},
+		appID:  1234567890,
 	}
 }
