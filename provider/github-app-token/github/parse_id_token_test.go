@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -59,7 +60,15 @@ func TestParseIDToken_Integrated(t *testing.T) {
 }
 
 func getIdToken(ctx context.Context, idToken, idURL string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, idURL, nil)
+	u, err := url.Parse(idURL)
+	if err != nil {
+		return "", err
+	}
+	q := u.Query()
+	q.Set("audience", "https://github.com/shogo82148/actions-github-app-token")
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", err
 	}
