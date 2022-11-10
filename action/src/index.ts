@@ -121,14 +121,16 @@ function isIdTokenAvailable(): boolean {
 
 async function run() {
   const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
-  const defaultAudience = "https://github.com/shogo82148/actions-github-app-token";
+  const defaultAppID = "136245";
+  const audiencePrefix = "https://github-app.shogo82148.com/";
   try {
     const required = {
       required: true,
     };
     const githubToken = core.getInput("github-token", required);
     const providerEndpoint = core.getInput("provider-endpoint") || defaultProviderEndpoint;
-    const audience = core.getInput("audience", { required: false }) || defaultAudience;
+    const appID = core.getInput("app-id") || defaultAppID;
+    const audience = audiencePrefix + appID;
 
     await assumeRole({
       githubToken,

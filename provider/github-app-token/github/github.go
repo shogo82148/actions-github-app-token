@@ -27,6 +27,7 @@ const (
 	// The default url of Github API
 	defaultAPIBaseURL = "https://api.github.com"
 
+	// issuer of JWT tokens
 	oidcIssuer = "https://token.actions.githubusercontent.com"
 )
 

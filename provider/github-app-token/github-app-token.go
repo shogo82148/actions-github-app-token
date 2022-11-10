@@ -36,11 +36,13 @@ const (
 	creatorLogin        = "github-actions[bot]"
 	creatorID           = 41898282
 	creatorType         = "Bot"
+	audiencePrefix      = "https://github-app.shogo82148.com/"
 )
 
 type Handler struct {
 	github githubClient
 	app    *github.GetAppResponse
+	appID  uint64
 }
 
 func NewHandler() (*Handler, error) {
@@ -86,6 +88,7 @@ func NewHandler() (*Handler, error) {
 	return &Handler{
 		github: c,
 		app:    app,
+		appID:  appID,
 	}, nil
 }
 
@@ -180,6 +183,9 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 				message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
 			}
 		}
+		if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
+			return nil, fmt.Errorf("invalid audience: %v", id.Audience)
+		}
 		owner, repo, err = splitOwnerRepo(id.Repository)
 		if err != nil {
 			return nil, err
@@ -216,6 +222,15 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	return &responseBody{
 		GitHubToken: resp.Token,
 	}, nil
+}
+
+func contains(slice []string, s string) bool {
+	for _, v := range slice {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
