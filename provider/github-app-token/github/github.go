@@ -31,7 +31,7 @@ const (
 	oidcIssuer = "https://token.actions.githubusercontent.com"
 )
 
-var apiBaseURL string
+var apiBaseURL *url.URL
 
 func init() {
 	u := os.Getenv("GITHUB_API_URL")
@@ -40,7 +40,7 @@ func init() {
 	}
 
 	var err error
-	apiBaseURL, err = canonicalURL(u)
+	apiBaseURL, err = url.Parse(u)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +53,7 @@ type Doer interface {
 
 // Client is a very light weight GitHub API Client.
 type Client struct {
-	baseURL    string
+	baseURL    *url.URL
 	httpClient Doer
 
 	// configure for GitHub App
@@ -76,6 +76,7 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 	if err != nil {
 		return nil, err
 	}
+
 	c := &Client{
 		baseURL:    apiBaseURL,
 		httpClient: httpClient,
@@ -119,8 +120,8 @@ func (c *Client) ValidateAPIURL(url string) error {
 	if err != nil {
 		return err
 	}
-	if u != c.baseURL {
-		if c.baseURL == defaultAPIBaseURL {
+	if u != c.baseURL.String() {
+		if c.baseURL.String() == defaultAPIBaseURL {
 			return errors.New(
 				"it looks that you use GitHub Enterprise Server, " +
 					"but the credential provider doesn't support it. " +

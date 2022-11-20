@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/shogo82148/pointer"
 )
 
 type CreateAppAccessTokenRequest struct {
@@ -46,18 +48,20 @@ func (c *Client) CreateAppAccessToken(ctx context.Context, installationID uint64
 	}
 
 	// build the request
-	u := fmt.Sprintf("%s/app/installations/%d/access_tokens", c.baseURL, installationID)
+	u := pointer.ShallowCopy(c.baseURL)
+	u.Path = fmt.Sprintf("app/installations/%d/access_tokens", installationID)
 	body, err := json.Marshal(permissions)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", githubUserAgent)
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Github-Next-Global-ID", "1")
 
 	// send the request
 	resp, err := c.httpClient.Do(req)

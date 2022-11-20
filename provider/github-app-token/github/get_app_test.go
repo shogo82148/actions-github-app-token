@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -74,7 +75,10 @@ func TestGetApp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c.baseURL = ts.URL
+	c.baseURL, err = url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	resp, err := c.GetApp(context.Background())
 	if err != nil {

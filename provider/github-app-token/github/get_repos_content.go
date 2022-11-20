@@ -4,27 +4,29 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-
-	"github.com/shogo82148/pointer"
+	"net/url"
+	gopath "path"
 )
 
-type GetAppResponse struct {
-	HTMLURL string `json:"html_url"`
+type GetReposContentResponse struct {
+	Type     string `json:"type"`
+	Encoding string `json:"encoding"`
+	Content  string `json:"content"`
 
 	// omit other fields, we don't use them.
 }
 
-// GetApp returns the GitHub App associated with the authentication credentials used.
-// https://docs.github.com/en/rest/reference/apps#get-the-authenticated-app
-func (c *Client) GetApp(ctx context.Context) (*GetAppResponse, error) {
+// GetReposContent gets a repository content.
+// https://docs.github.com/en/rest/repos/contents#get-repository-content
+func (c *Client) GetReposContent(ctx context.Context, owner, repo, path string) (*GetReposContentResponse, error) {
 	token, err := c.generateJWT()
 	if err != nil {
 		return nil, err
 	}
 
 	// build the request
-	u := pointer.ShallowCopy(c.baseURL)
-	u.Path = "app"
+	path = gopath.Clean("/" + path)
+	u := c.baseURL.JoinPath("repos", url.PathEscape(owner), url.PathEscape(repo), "contents", path)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
@@ -46,7 +48,7 @@ func (c *Client) GetApp(ctx context.Context) (*GetAppResponse, error) {
 		return nil, newErrUnexpectedStatusCode(resp)
 	}
 
-	var ret *GetAppResponse
+	var ret *GetReposContentResponse
 	if err := json.NewDecoder(resp.Body).Decode(&ret); err != nil {
 		return nil, err
 	}

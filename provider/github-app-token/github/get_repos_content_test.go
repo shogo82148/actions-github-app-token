@@ -16,15 +16,15 @@ import (
 	"github.com/shogo82148/goat/sig"
 )
 
-func TestCreateAppAccessToken(t *testing.T) {
+func TestGetReposContent(t *testing.T) {
 	privateKey, err := os.ReadFile("./testdata/id_rsa_for_testing")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("unexpected method: want POST, got %s", r.Method)
+		if r.Method != http.MethodGet {
+			t.Errorf("unexpected method: want GET, got %s", r.Method)
 		}
 
 		auth := r.Header.Get("Authorization")
@@ -55,18 +55,18 @@ func TestCreateAppAccessToken(t *testing.T) {
 			t.Errorf("unexpected issuer: want %q, got %q", "123456", iss)
 		}
 
-		path := "/app/installations/123456789/access_tokens"
+		path := "/repos/shogo82148/actions-github-app-token/contents/.github/actions.yaml"
 		if r.URL.Path != path {
 			t.Errorf("unexpected path: want %q, got %q", path, r.URL.Path)
 		}
 
-		data, err := os.ReadFile("testdata/access-tokens.json")
+		data, err := os.ReadFile("testdata/repos-content.json")
 		if err != nil {
 			panic(err)
 		}
 		rw.Header().Set("Content-Type", "application/json")
 		rw.Header().Set("Content-Length", strconv.Itoa(len(data)))
-		rw.WriteHeader(http.StatusCreated)
+		rw.WriteHeader(http.StatusOK)
 		rw.Write(data)
 	}))
 	defer ts.Close()
@@ -80,17 +80,11 @@ func TestCreateAppAccessToken(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := c.CreateAppAccessToken(context.Background(), 123456789, &CreateAppAccessTokenRequest{
-		Repositories: []string{"repositories"},
-		Permissions: &CreateAppAccessTokenRequestPermissions{
-			Contents: "read",
-		},
-	})
+	resp, err := c.GetReposContent(context.Background(), "shogo82148", "actions-github-app-token", "../.github/workflows/../actions.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if resp.Token != "ghs_dummyGitHubToken" {
-		t.Errorf("unexpected access token: want %q, got %q", "ghs_dummyGitHubToken", resp.Token)
+	if resp.Type != "file" {
+		t.Errorf("got %q, want %q", resp.Type, "file")
 	}
 }

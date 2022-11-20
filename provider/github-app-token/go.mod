@@ -9,6 +9,7 @@ require (
 	github.com/shogo82148/aws-xray-yasdk-go v1.5.1
 	github.com/shogo82148/ctxlog v0.1.0
 	github.com/shogo82148/goat v0.0.5
+	github.com/shogo82148/pointer v1.2.0
 	github.com/shogo82148/ridgenative v1.2.1
 )
 
