@@ -27,7 +27,7 @@ func (c *Client) GetReposInstallation(ctx context.Context, owner, repo string) (
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", githubUserAgent)
 	req.Header.Set("Authorization", "Bearer "+token)
 
