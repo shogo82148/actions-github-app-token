@@ -1,8 +1,6 @@
-name: deploy to production
+name: deploy to staging
 on:
   push:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}
@@ -15,7 +13,7 @@ jobs:
       id-token: write
       statuses: write
       contents: read
-    environment: production
+    environment: staging
 
     steps:
       - name: Check out code
@@ -36,7 +34,7 @@ jobs:
       - uses: fuller-inc/actions-aws-assume-role@ee49a108ae9920a17c4abf0931f30935fea2d2b0 # v1.5.3
         with:
           aws-region: us-east-1
-          role-to-assume: arn:aws:iam::978218332026:role/github-app-token-github-actions-us-east-1
+          role-to-assume: arn:aws:iam::616212855146:role/github-app-token-github-actions-us-east-1
           role-session-tagging: true
           use-node-id: true
 
@@ -45,4 +43,4 @@ jobs:
           make deploy
         working-directory: provider
         env:
-          APP_ENV: production
+          APP_ENV: staging
