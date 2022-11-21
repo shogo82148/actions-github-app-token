@@ -89,9 +89,8 @@ func NewHandler() (*Handler, error) {
 }
 
 type requestBody struct {
-	Repository string `json:"repository"`
-	SHA        string `json:"sha"`
-	APIURL     string `json:"api_url"`
+	Repositories []string `json:"repositories"`
+	APIURL       string   `json:"api_url"`
 }
 
 type responseBody struct {
@@ -162,6 +161,10 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 			message: err.Error(),
 		}
 	}
+
+	log.Info(ctx, "repositories", log.Fields{
+		"repositories": req.Repositories,
+	})
 
 	// authorize the request
 	var err error

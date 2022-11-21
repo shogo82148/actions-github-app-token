@@ -8,6 +8,9 @@ inputs:
   app-id:
     description: "GitHub Apps ID"
     required: false
+  repositories:
+    description: "repositories you want to access. It is a list of global node ids of the repositories."
+    required: false
 outputs:
   token:
     description: An installation token for the GitHub App on the requested repository.
