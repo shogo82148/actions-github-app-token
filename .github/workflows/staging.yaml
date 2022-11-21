@@ -42,3 +42,5 @@ jobs:
         run: |
           make deploy
         working-directory: provider
+        env:
+          APP_ENV: staging
