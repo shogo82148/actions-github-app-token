@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-
-	"github.com/shogo82148/pointer"
 )
 
 type GetAppResponse struct {
@@ -23,8 +21,7 @@ func (c *Client) GetApp(ctx context.Context) (*GetAppResponse, error) {
 	}
 
 	// build the request
-	u := pointer.ShallowCopy(c.baseURL)
-	u.Path = "app"
+	u := c.baseURL.JoinPath("app")
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err

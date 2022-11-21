@@ -46,7 +46,6 @@ github.com/shogo82148/goat v0.0.5/go.mod h1:pcmnSPlJ3NS2klZNaT06i8Xq2mD+S2yqF1IT
 github.com/shogo82148/memoize v0.0.2 h1:KBHGjTpwuKPyCzpNlpNT79hKfmJaheHxpIuqdGzqdIE=
 github.com/shogo82148/memoize v0.0.2/go.mod h1:sOsvhOlJGVR2nHgCzUchvbEeYB6jNvSP9o4SPHgb+bY=
 github.com/shogo82148/pointer v1.2.0 h1:MEPjAx9hK17sdEVhaqHROphdy+RxTH70vaBypZzZ/d8=
-github.com/shogo82148/pointer v1.2.0/go.mod h1:agZ5JFpavFPXznbWonIvbG78NDfvDTFppe+7o53up5w=
 github.com/shogo82148/ridgenative v1.2.1 h1:K0UAezwqx5YD2nNyjhsMciKvbM16zTvfbE4lKGb/Sx8=
 github.com/shogo82148/ridgenative v1.2.1/go.mod h1:t8dpXl0ucF9e6E4ycIBkPOi56wX1H/AITW4XAUhjYfY=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

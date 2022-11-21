@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-
-	"github.com/shogo82148/pointer"
+	"strconv"
 )
 
 type CreateAppAccessTokenRequest struct {
@@ -48,8 +46,7 @@ func (c *Client) CreateAppAccessToken(ctx context.Context, installationID uint64
 	}
 
 	// build the request
-	u := pointer.ShallowCopy(c.baseURL)
-	u.Path = fmt.Sprintf("app/installations/%d/access_tokens", installationID)
+	u := c.baseURL.JoinPath("app", "installations", strconv.FormatUint(installationID, 10), "access_tokens")
 	body, err := json.Marshal(permissions)
 	if err != nil {
 		return nil, err
