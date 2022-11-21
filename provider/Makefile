@@ -5,7 +5,7 @@ build:
 
 .PHONY: deploy
 deploy:
-	sam deploy
+	./deploy.sh
 
 # prepare resrouces for CI/CD
 .PHONY: cicd
