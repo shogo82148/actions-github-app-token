@@ -15,7 +15,7 @@ func (c *githubClientDummy) GetApp(ctx context.Context) (*github.GetAppResponse,
 	}, nil
 }
 
-func (c *githubClientDummy) GetReposInfo(ctx context.Context, nodeID string) (*github.GetReposInfoResponse, error) {
+func (c *githubClientDummy) GetReposInfo(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error) {
 	return &github.GetReposInfoResponse{}, nil
 }
 

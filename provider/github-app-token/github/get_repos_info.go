@@ -32,7 +32,7 @@ type getReposInfoResponse struct {
 
 // GetReposContent gets a repository content.
 // https://docs.github.com/en/rest/repos/contents#get-repository-content
-func (c *Client) GetReposInfo(ctx context.Context, nodeID string) (*GetReposInfoResponse, error) {
+func (c *Client) GetReposInfo(ctx context.Context, token, nodeID string) (*GetReposInfoResponse, error) {
 	const query = `query MyQuery($id: ID!) {
 node(id: $id) {
 	... on Repository {
@@ -57,10 +57,6 @@ node(id: $id) {
 		return nil, err
 	}
 
-	token, err := c.generateJWT()
-	if err != nil {
-		return nil, err
-	}
 	u := c.baseURL.JoinPath("graphql")
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(body))
 	if err != nil {

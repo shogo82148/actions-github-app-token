@@ -23,7 +23,7 @@ import (
 type githubClient interface {
 	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
-	GetReposInfo(ctx context.Context, nodeID string) (*github.GetReposInfoResponse, error)
+	GetReposInfo(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
 	ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
@@ -182,18 +182,6 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		return nil, err
 	}
 
-	for _, nodeID := range req.Repositories {
-		resp, err := h.github.GetReposInfo(ctx, nodeID)
-		if err != nil {
-			return nil, err
-		}
-		log.Debug(ctx, "repository info", log.Fields{
-			"owner": resp.Owner,
-			"name":  resp.Name,
-			"id":    resp.ID,
-		})
-	}
-
 	// issue a new access token
 	inst, err := h.github.GetReposInstallation(ctx, owner, repo)
 	if err != nil {
@@ -212,6 +200,27 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		}
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
+
+	{
+		resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{})
+		if err != nil {
+			return nil, fmt.Errorf("failed create access token: %w", err)
+		}
+
+		token := resp.Token
+		for _, nodeID := range req.Repositories {
+			resp, err := h.github.GetReposInfo(ctx, token, nodeID)
+			if err != nil {
+				return nil, err
+			}
+			log.Debug(ctx, "repository info", log.Fields{
+				"owner": resp.Owner,
+				"name":  resp.Name,
+				"id":    resp.ID,
+			})
+		}
+	}
+
 	resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
 		Repositories: []string{repo},
 	})
