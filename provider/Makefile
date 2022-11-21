@@ -14,4 +14,5 @@ cicd:
 		--region us-east-1 \
 		--stack-name "github-app-token-cicd" \
 		--template-file "cicd.yaml" \
-		--capabilities CAPABILITY_NAMED_IAM
+		--capabilities CAPABILITY_NAMED_IAM \
+		--parameter-overrides Environment=${APP_ENV}
