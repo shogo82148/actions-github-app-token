@@ -10,7 +10,7 @@ import (
 
 type CreateAppAccessTokenRequest struct {
 	Repositories  []string `json:"repositories,omitempty"`
-	RepositoryIDs []string `json:"repository_ids,omitempty"`
+	RepositoryIDs []uint64 `json:"repository_ids,omitempty"`
 
 	Permissions *CreateAppAccessTokenRequestPermissions `json:"permissions,omitempty"`
 }

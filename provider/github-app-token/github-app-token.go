@@ -164,20 +164,11 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	}
 
 	// authorize the request
-	var err error
-	var owner, repo string
-	id, err := h.github.ParseIDToken(ctx, token)
+	id, err := h.validateToken(ctx, token)
 	if err != nil {
-		return nil, &validationError{
-			message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
-		}
+		return nil, err
 	}
-	if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
-		return nil, &validationError{
-			message: fmt.Sprintf("invalid audience: %v", id.Audience),
-		}
-	}
-	owner, repo, err = splitOwnerRepo(id.Repository)
+	owner, repo, err := splitOwnerRepo(id.Repository)
 	if err != nil {
 		return nil, err
 	}
@@ -201,28 +192,18 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
 
-	{
-		resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{})
-		if err != nil {
-			return nil, fmt.Errorf("failed create access token: %w", err)
-		}
-
-		token := resp.Token
-		for _, nodeID := range req.Repositories {
-			resp, err := h.github.GetReposInfo(ctx, token, nodeID)
-			if err != nil {
-				return nil, err
-			}
-			log.Debug(ctx, "repository info", log.Fields{
-				"owner": resp.Owner,
-				"name":  resp.Name,
-				"id":    resp.ID,
-			})
-		}
+	repoIDs, err := h.getRepositoryIDs(ctx, inst.ID, req.Repositories)
+	if err != nil {
+		return nil, err
 	}
 
+	repoID, err := strconv.ParseUint(id.RepositoryID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	repoIDs = append(repoIDs, repoID)
 	resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
-		Repositories: []string{repo},
+		RepositoryIDs: repoIDs,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed create access token: %w", err)
@@ -240,6 +221,42 @@ func contains(slice []string, s string) bool {
 		}
 	}
 	return false
+}
+
+func (h *Handler) validateToken(ctx context.Context, token string) (*github.ActionsIDToken, error) {
+	id, err := h.github.ParseIDToken(ctx, token)
+	if err != nil {
+		return nil, &validationError{
+			message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
+		}
+	}
+	if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
+		return nil, &validationError{
+			message: fmt.Sprintf("invalid audience: %v", id.Audience),
+		}
+	}
+	return id, nil
+}
+
+func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, nodeIDs []string) ([]uint64, error) {
+	resp, err := h.github.CreateAppAccessToken(ctx, inst, &github.CreateAppAccessTokenRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed create access token: %w", err)
+	}
+
+	token := resp.Token
+	for _, nodeID := range nodeIDs {
+		resp, err := h.github.GetReposInfo(ctx, token, nodeID)
+		if err != nil {
+			return nil, err
+		}
+		log.Debug(ctx, "repository info", log.Fields{
+			"owner": resp.Owner,
+			"name":  resp.Name,
+			"id":    resp.ID,
+		})
+	}
+	return nil, nil
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
