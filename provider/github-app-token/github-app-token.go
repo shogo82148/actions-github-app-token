@@ -41,6 +41,8 @@ type Handler struct {
 func NewHandler() (*Handler, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx, seg := xray.BeginDummySegment(ctx)
+	defer seg.Close()
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
