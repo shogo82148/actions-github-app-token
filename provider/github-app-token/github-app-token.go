@@ -23,6 +23,7 @@ import (
 type githubClient interface {
 	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
+	GetReposInfo(ctx context.Context, nodeID string) (*github.GetReposInfoResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
 	ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
@@ -162,10 +163,6 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		}
 	}
 
-	log.Info(ctx, "repositories", log.Fields{
-		"repositories": req.Repositories,
-	})
-
 	// authorize the request
 	var err error
 	var owner, repo string
@@ -183,6 +180,18 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	owner, repo, err = splitOwnerRepo(id.Repository)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, nodeID := range req.Repositories {
+		resp, err := h.github.GetReposInfo(ctx, nodeID)
+		if err != nil {
+			return nil, err
+		}
+		log.Debug(ctx, "repository info", log.Fields{
+			"owner": resp.Owner,
+			"name":  resp.Name,
+			"id":    resp.ID,
+		})
 	}
 
 	// issue a new access token
