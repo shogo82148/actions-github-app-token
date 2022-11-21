@@ -57,6 +57,11 @@ jobs:
           npm ci
         working-directory: action
 
+      - name: Build
+        run: |
+          npm run build
+        working-directory: action
+
       - name: Use the action
         uses: ./
         with:
