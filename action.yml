@@ -5,8 +5,8 @@ inputs:
   provider-endpoint:
     description: "URL for credential provider"
     required: false
-  audience:
-    description: "the audience of id token"
+  app-id:
+    description: "GitHub Apps ID"
     required: false
 outputs:
   token:
