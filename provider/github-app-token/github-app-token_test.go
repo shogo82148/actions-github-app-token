@@ -52,7 +52,8 @@ func TestHandle(t *testing.T) {
 					Claims: &jwt.Claims{
 						Audience: []string{"https://github-app.shogo82148.com/1234567890"},
 					},
-					Repository: "shogo82148/actions-github-app-token",
+					Repository:   "shogo82148/actions-github-app-token",
+					RepositoryID: "398574950",
 				}, nil
 			},
 			GetReposInstallationFunc: func(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error) {
