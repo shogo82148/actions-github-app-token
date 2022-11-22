@@ -7,22 +7,16 @@ import (
 	"net/url"
 )
 
-type GetReposInstallationResponse struct {
-	ID uint64 `json:"id"`
-
-	// omit other fields, we don't use them.
+type GetRepoResponse struct {
+	ID     uint64 `json:"id"`
+	NodeID string `json:"node_id"`
 }
 
-// GetReposInstallation gets a repository installation for the authenticated app
-// https://docs.github.com/en/rest/reference/apps#get-a-repository-installation-for-the-authenticated-app
-func (c *Client) GetReposInstallation(ctx context.Context, owner, repo string) (*GetReposInstallationResponse, error) {
-	token, err := c.generateJWT()
-	if err != nil {
-		return nil, err
-	}
-
+// GetRepo gets a repository.
+// https://docs.github.com/en/rest/repos/repos#get-a-repository
+func (c *Client) GetRepo(ctx context.Context, token, owner, repo string) (*GetRepoResponse, error) {
 	// build the request
-	u := c.baseURL.JoinPath("repos", url.PathEscape(owner), url.PathEscape(repo), "installation")
+	u := c.baseURL.JoinPath("repos", url.PathEscape(owner), url.PathEscape(repo))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
@@ -44,7 +38,7 @@ func (c *Client) GetReposInstallation(ctx context.Context, owner, repo string) (
 		return nil, newErrUnexpectedStatusCode(resp)
 	}
 
-	var ret *GetReposInstallationResponse
+	var ret *GetRepoResponse
 	if err := json.NewDecoder(resp.Body).Decode(&ret); err != nil {
 		return nil, err
 	}

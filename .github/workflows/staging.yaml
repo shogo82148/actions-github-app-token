@@ -44,3 +44,37 @@ jobs:
         working-directory: provider
         env:
           APP_ENV: staging
+
+      - name: Set up Node.js
+        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3.5.1
+        with:
+          node-version: "16.x"
+          cache: "npm"
+          cache-dependency-path: action/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+        working-directory: action
+
+      - name: Build
+        run: |
+          npm run build
+        working-directory: action
+
+      - id: generate
+        name: Use the action
+        uses: ./
+        with:
+          provider-endpoint: https://8y6823l0x3.execute-api.us-east-1.amazonaws.com
+          app-id: "263885"
+          repositories: |
+            R_kgDOIeornQ
+            R_kgDOIevBqQ
+
+      - name: Check out code
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+        with:
+          repository: 'shogo82148/improved-lamp'
+          path: improved-lamp
+          token: ${{ steps.generate.outputs.token }}

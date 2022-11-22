@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/goccy/go-yaml"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 	"github.com/shogo82148/aws-xray-yasdk-go/xray"
 	"github.com/shogo82148/aws-xray-yasdk-go/xrayhttp"
@@ -23,6 +24,9 @@ import (
 type githubClient interface {
 	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
+	GetRepo(ctx context.Context, token, owner, repo string) (*github.GetRepoResponse, error)
+	GetReposInfo(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error)
+	GetReposContent(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
 	ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
@@ -41,6 +45,8 @@ type Handler struct {
 func NewHandler() (*Handler, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx, seg := xray.BeginDummySegment(ctx)
+	defer seg.Close()
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
@@ -87,9 +93,8 @@ func NewHandler() (*Handler, error) {
 }
 
 type requestBody struct {
-	Repository string `json:"repository"`
-	SHA        string `json:"sha"`
-	APIURL     string `json:"api_url"`
+	Repositories []string `json:"repositories"`
+	APIURL       string   `json:"api_url"`
 }
 
 type responseBody struct {
@@ -117,10 +122,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	traceID := xray.ContextTraceID(ctx)
-	ctx = log.With(ctx, log.Fields{
-		"amzn_trace_id": traceID,
-	})
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -162,20 +163,11 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	}
 
 	// authorize the request
-	var err error
-	var owner, repo string
-	id, err := h.github.ParseIDToken(ctx, token)
+	id, err := h.validateToken(ctx, token)
 	if err != nil {
-		return nil, &validationError{
-			message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
-		}
+		return nil, err
 	}
-	if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
-		return nil, &validationError{
-			message: fmt.Sprintf("invalid audience: %v", id.Audience),
-		}
-	}
-	owner, repo, err = splitOwnerRepo(id.Repository)
+	owner, repo, err := splitOwnerRepo(id.Repository)
 	if err != nil {
 		return nil, err
 	}
@@ -183,8 +175,7 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	// issue a new access token
 	inst, err := h.github.GetReposInstallation(ctx, owner, repo)
 	if err != nil {
-		var ghErr *github.ErrUnexpectedStatusCode
-		if errors.As(err, &ghErr) && ghErr.StatusCode == http.StatusNotFound {
+		if status, ok := githubStatusCode(err); ok && status == http.StatusNotFound {
 			// installation not found.
 			// the user may not install the app.
 			return nil, &validationError{
@@ -198,8 +189,18 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		}
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
+
+	repoID, err := strconv.ParseUint(id.RepositoryID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	repoIDs, err := h.getRepositoryIDs(ctx, inst.ID, repoID, owner, repo, req.Repositories)
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
-		Repositories: []string{repo},
+		RepositoryIDs: repoIDs,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed create access token: %w", err)
@@ -217,6 +218,107 @@ func contains(slice []string, s string) bool {
 		}
 	}
 	return false
+}
+
+func (h *Handler) validateToken(ctx context.Context, token string) (*github.ActionsIDToken, error) {
+	id, err := h.github.ParseIDToken(ctx, token)
+	if err != nil {
+		return nil, &validationError{
+			message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
+		}
+	}
+	if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
+		return nil, &validationError{
+			message: fmt.Sprintf("invalid audience: %v", id.Audience),
+		}
+	}
+	return id, nil
+}
+
+func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, owner, repo string, nodeIDs []string) ([]uint64, error) {
+	if len(nodeIDs) == 0 {
+		return []uint64{repoID}, nil
+	}
+
+	resp, err := h.github.CreateAppAccessToken(ctx, inst, &github.CreateAppAccessTokenRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed create access token: %w", err)
+	}
+	token := resp.Token
+
+	detail, err := h.github.GetRepo(ctx, token, owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the repo: %w", err)
+	}
+	if detail.ID != repoID {
+		return nil, fmt.Errorf("repo id is mismatch")
+	}
+
+	ret := make([]uint64, 0, len(nodeIDs)+1)
+	ret = append(ret, repoID)
+	for _, nodeID := range nodeIDs {
+		ctx := log.With(ctx, log.Fields{
+			"repository_node_id": nodeID,
+		})
+
+		id, err := h.checkPermission(ctx, token, nodeID, detail.NodeID)
+		if err != nil {
+			log.Debug(ctx, "permission denied", log.Fields{
+				"error": err.Error(),
+			})
+			return nil, err
+		}
+		ret = append(ret, id)
+	}
+	return ret, nil
+}
+
+func (h *Handler) checkPermission(ctx context.Context, token, to, from string) (uint64, error) {
+	log.Debug(ctx, "checking permission", nil)
+	info, err := h.github.GetReposInfo(ctx, token, to)
+	if err != nil {
+		return 0, err
+	}
+
+	log.Debug(ctx, "fetching .github/actions.yaml", nil)
+	resp, err := h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yaml")
+	if err == nil {
+		return h.checkConfig(ctx, info, resp, from)
+	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
+		return 0, fmt.Errorf("failed to fetch .github/actions.yaml: %w", err)
+	}
+	log.Debug(ctx, ".github/actions.yaml not found", nil)
+
+	log.Debug(ctx, "fetching .github/actions.yml", nil)
+	resp, err = h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yml")
+	if err == nil {
+		return h.checkConfig(ctx, info, resp, from)
+	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
+		return 0, fmt.Errorf("failed to fetch .github/actions.yml: %w", err)
+	}
+	log.Debug(ctx, ".github/actions.yml not found", nil)
+
+	return 0, errors.New("config file is not found")
+}
+
+func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResponse, resp *github.GetReposContentResponse, from string) (uint64, error) {
+	content, err := resp.ParseFile()
+	if err != nil {
+		return 0, err
+	}
+	var config struct {
+		Repositories []string `yaml:"repositories"`
+	}
+	if err := yaml.Unmarshal(content, &config); err != nil {
+		return 0, err
+	}
+
+	for _, nodeID := range config.Repositories {
+		if nodeID == from {
+			return info.ID, nil
+		}
+	}
+	return 0, errors.New("permission denied")
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
@@ -288,4 +390,12 @@ func splitOwnerRepo(fullname string) (owner, repo string, err error) {
 	owner = fullname[:idx]
 	repo = fullname[idx+1:]
 	return
+}
+
+func githubStatusCode(err error) (int, bool) {
+	var ghErr *github.UnexpectedStatusCodeError
+	if errors.As(err, &ghErr) {
+		return ghErr.StatusCode, true
+	}
+	return 0, false
 }

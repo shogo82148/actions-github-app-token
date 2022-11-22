@@ -4,12 +4,12 @@ import * as http from "@actions/http-client";
 interface GetTokenParams {
   providerEndpoint: string;
   audience: string;
+  repositories: string[];
 }
 
 interface GetTokenPayload {
   api_url: string;
-  repository: string;
-  sha: string;
+  repositories: string[];
 }
 
 interface GetTokenResult {
@@ -22,22 +22,12 @@ interface GetTokenError {
   message: string;
 }
 
-function assertIsDefined<T>(val: T): asserts val is NonNullable<T> {
-  if (val === undefined || val === null) {
-    throw new Error(`Missing required environment value. Are you running in GitHub Actions?`);
-  }
-}
-
 export async function assumeRole(params: GetTokenParams) {
-  const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
-  assertIsDefined(GITHUB_REPOSITORY);
-  assertIsDefined(GITHUB_SHA);
   const GITHUB_API_URL = process.env["GITHUB_API_URL"] || "https://api.github.com";
 
   const payload: GetTokenPayload = {
     api_url: GITHUB_API_URL,
-    repository: GITHUB_REPOSITORY,
-    sha: GITHUB_SHA,
+    repositories: params.repositories,
   };
   const headers: { [name: string]: string } = {};
 
@@ -85,10 +75,12 @@ async function run() {
     const providerEndpoint = core.getInput("provider-endpoint") || defaultProviderEndpoint;
     const appID = core.getInput("app-id") || defaultAppID;
     const audience = audiencePrefix + appID;
+    const repositories = core.getInput("repositories").split(/\s+/);
 
     await assumeRole({
       providerEndpoint,
       audience,
+      repositories,
     });
   } catch (error) {
     if (error instanceof Error) {

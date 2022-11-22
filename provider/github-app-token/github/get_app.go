@@ -3,7 +3,6 @@ package github
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -22,14 +21,15 @@ func (c *Client) GetApp(ctx context.Context) (*GetAppResponse, error) {
 	}
 
 	// build the request
-	u := fmt.Sprintf("%s/app", c.baseURL)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	u := c.baseURL.JoinPath("app")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", githubUserAgent)
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Github-Next-Global-ID", "1")
 
 	// send the request
 	resp, err := c.httpClient.Do(req)

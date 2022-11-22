@@ -7,15 +7,6 @@ import * as io from "@actions/io";
 import * as exec from "@actions/exec";
 import * as index from "../src/index";
 
-// The environment values defined in the GitHub Actions Environment
-// https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-process.env.GITHUB_REPOSITORY = "shogo82148/actions-aws-assume-role";
-process.env.GITHUB_WORKFLOW = "test";
-process.env.GITHUB_RUN_ID = "1234567890";
-process.env.GITHUB_ACTOR = "shogo82148";
-process.env.GITHUB_SHA = "e3a45c6c16c1464826b36a598ff39e6cc98c4da4";
-process.env.GITHUB_REF = "ref/heads/main";
-
 const sep = path.sep;
 
 // extension of executable files
@@ -65,6 +56,7 @@ describe("tests", () => {
     await index.assumeRole({
       providerEndpoint: "http://localhost:8080",
       audience: "https://github-app.shogo82148.com/1234567890",
+      repositories: ["R_123456"],
     });
     expect(core.setSecret).toHaveBeenCalledWith("ghs_dummyGitHubToken");
   });
