@@ -8,7 +8,7 @@ import (
 )
 
 type GetRepoResponse struct {
-	ID     string
+	ID     uint64
 	NodeID string
 }
 

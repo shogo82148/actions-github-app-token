@@ -17,7 +17,7 @@ func (c *githubClientDummy) GetApp(ctx context.Context) (*github.GetAppResponse,
 
 func (c *githubClientDummy) GetRepo(ctx context.Context, token, owner, repo string) (*github.GetRepoResponse, error) {
 	return &github.GetRepoResponse{
-		ID:     "398574950",
+		ID:     398574950,
 		NodeID: "R_kgDOF8HFZg",
 	}, nil
 }
