@@ -62,7 +62,8 @@ jobs:
           npm run build
         working-directory: action
 
-      - name: Use the action
+      - id: generate
+        name: Use the action
         uses: ./
         with:
           provider-endpoint: https://8y6823l0x3.execute-api.us-east-1.amazonaws.com
@@ -70,3 +71,10 @@ jobs:
           repositories: |
             R_kgDOIeornQ
             R_kgDOIevBqQ
+
+      - name: Check out code
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+        with:
+          repository: 'shogo82148/improved-lamp'
+          path: improved-lamp
+          token: ${{ steps.generate.outputs.token }}
