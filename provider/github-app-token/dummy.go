@@ -40,7 +40,8 @@ func (c *githubClientDummy) ParseIDToken(ctx context.Context, idToken string) (*
 		Claims: &jwt.Claims{
 			Audience: []string{"https://github-app.shogo82148.com/1234567890"},
 		},
-		Repository: "shogo82148/actions-github-app-token",
+		Repository:   "shogo82148/actions-github-app-token",
+		RepositoryID: "398574950",
 	}, nil
 }
 
