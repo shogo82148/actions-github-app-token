@@ -80,7 +80,7 @@ func TestGetReposContent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := c.GetReposContent(context.Background(), "shogo82148", "actions-github-app-token", "../.github/workflows/../actions.yaml")
+	resp, err := c.GetReposContent(context.Background(), "secret", "shogo82148", "actions-github-app-token", "../.github/workflows/../actions.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}

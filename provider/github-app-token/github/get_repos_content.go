@@ -18,12 +18,7 @@ type GetReposContentResponse struct {
 
 // GetReposContent gets a repository content.
 // https://docs.github.com/en/rest/repos/contents#get-repository-content
-func (c *Client) GetReposContent(ctx context.Context, owner, repo, path string) (*GetReposContentResponse, error) {
-	token, err := c.generateJWT()
-	if err != nil {
-		return nil, err
-	}
-
+func (c *Client) GetReposContent(ctx context.Context, token, owner, repo, path string) (*GetReposContentResponse, error) {
 	// build the request
 	path = gopath.Clean("/" + path)
 	u := c.baseURL.JoinPath("repos", url.PathEscape(owner), url.PathEscape(repo), "contents", path)

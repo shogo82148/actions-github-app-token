@@ -12,7 +12,7 @@ type githubClientMock struct {
 	GetAppFunc               func(ctx context.Context) (*github.GetAppResponse, error)
 	GetReposInstallationFunc func(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
 	GetReposInfoFunc         func(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error)
-	GetReposContentFunc      func(ctx context.Context, owner, repo, path string) (*github.GetReposContentResponse, error)
+	GetReposContentFunc      func(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error)
 	CreateAppAccessTokenFunc func(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURLFunc       func(url string) error
 	ParseIDTokenFunc         func(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
@@ -30,8 +30,8 @@ func (c *githubClientMock) GetReposInfo(ctx context.Context, token, nodeID strin
 	return c.GetReposInfoFunc(ctx, token, nodeID)
 }
 
-func (c *githubClientMock) GetReposContent(ctx context.Context, owner, repo, path string) (*github.GetReposContentResponse, error) {
-	return c.GetReposContentFunc(ctx, owner, repo, path)
+func (c *githubClientMock) GetReposContent(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error) {
+	return c.GetReposContentFunc(ctx, token, owner, repo, path)
 }
 
 func (c *githubClientMock) CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error) {
