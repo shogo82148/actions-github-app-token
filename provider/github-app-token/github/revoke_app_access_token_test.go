@@ -16,8 +16,8 @@ func TestRevokeAccessToken(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			t.Errorf("unexpected method: want GET, got %s", r.Method)
+		if r.Method != http.MethodDelete {
+			t.Errorf("unexpected method: want DELETE, got %s", r.Method)
 		}
 
 		auth := r.Header.Get("Authorization")
