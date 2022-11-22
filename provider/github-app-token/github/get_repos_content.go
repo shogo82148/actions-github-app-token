@@ -22,10 +22,14 @@ func (resp *GetReposContentResponse) ParseFile() ([]byte, error) {
 	if resp.Type != "file" {
 		return nil, fmt.Errorf("github: unexpected type: %q", resp.Type)
 	}
-	if resp.Encoding == "" {
+	switch resp.Encoding {
+	case "base64":
+		return base64.StdEncoding.DecodeString(resp.Content)
+	case "":
 		return []byte(resp.Content), nil
+	default:
+		return nil, fmt.Errorf("github: unknown encoding: %q", resp.Encoding)
 	}
-	return base64.StdEncoding.DecodeString(resp.Content)
 }
 
 // GetReposContent gets a repository content.

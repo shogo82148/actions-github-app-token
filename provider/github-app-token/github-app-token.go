@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/goccy/go-yaml"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 	"github.com/shogo82148/aws-xray-yasdk-go/xray"
 	"github.com/shogo82148/aws-xray-yasdk-go/xrayhttp"
@@ -120,9 +121,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	ctx = log.With(ctx, log.Fields{
-		"amzn_trace_id": w.Header().Get("X-Amzn-Trace-Id"),
-	})
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -176,8 +174,7 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	// issue a new access token
 	inst, err := h.github.GetReposInstallation(ctx, owner, repo)
 	if err != nil {
-		var ghErr *github.ErrUnexpectedStatusCode
-		if errors.As(err, &ghErr) && ghErr.StatusCode == http.StatusNotFound {
+		if status, ok := githubStatusCode(err); ok && status == http.StatusNotFound {
 			// installation not found.
 			// the user may not install the app.
 			return nil, &validationError{
@@ -247,33 +244,64 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, nodeIDs []s
 	var ret []uint64
 	token := resp.Token
 	for _, nodeID := range nodeIDs {
-		log.Debug(ctx, "checking permission", log.Fields{
-			"node_id": nodeID,
+		ctx := log.With(ctx, log.Fields{
+			"repository_node_id": nodeID,
 		})
-		resp, err := h.github.GetReposInfo(ctx, token, nodeID)
+
+		id, err := h.checkPermission(ctx, token, nodeID)
 		if err != nil {
-			return nil, err
-		}
-		r, err := h.github.GetReposContent(ctx, token, resp.Owner, resp.Name, ".github/actions.yaml")
-		if err != nil {
-			log.Debug(ctx, "failed to get actions.yaml", log.Fields{
+			log.Debug(ctx, "permission denied", log.Fields{
 				"error": err.Error(),
 			})
-		} else {
-			content, err := r.ParseFile()
-			if err != nil {
-				log.Debug(ctx, "failed to get actions.yaml", log.Fields{
-					"error": err.Error(),
-				})
-			} else {
-				log.Debug(ctx, "success to actions.yaml", log.Fields{
-					"content": content,
-				})
-			}
+			return nil, err
 		}
-		ret = append(ret, resp.ID)
+		ret = append(ret, id)
 	}
 	return ret, nil
+}
+
+func (h *Handler) checkPermission(ctx context.Context, token, nodeID string) (uint64, error) {
+	log.Debug(ctx, "checking permission", nil)
+	info, err := h.github.GetReposInfo(ctx, token, nodeID)
+	if err != nil {
+		return 0, err
+	}
+
+	log.Debug(ctx, "fetching .github/actions.yaml", nil)
+	resp, err := h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yaml")
+	if err == nil {
+		return h.checkConfig(ctx, info, resp)
+	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
+		return 0, fmt.Errorf("failed to fetch .github/actions.yaml: %w", err)
+	}
+	log.Debug(ctx, ".github/actions.yaml not found", nil)
+
+	log.Debug(ctx, "fetching .github/actions.yml", nil)
+	resp, err = h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yml")
+	if err == nil {
+		return h.checkConfig(ctx, info, resp)
+	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
+		return 0, fmt.Errorf("failed to fetch .github/actions.yml: %w", err)
+	}
+	log.Debug(ctx, ".github/actions.yml not found", nil)
+
+	return 0, errors.New("config file is not found")
+}
+
+func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResponse, resp *github.GetReposContentResponse) (uint64, error) {
+	content, err := resp.ParseFile()
+	if err != nil {
+		return 0, err
+	}
+	var config struct {
+		Repositories []string `yaml:"repositories"`
+	}
+	if err := yaml.Unmarshal(content, &config); err != nil {
+		return 0, err
+	}
+
+	// TODO: check config
+	return info.ID, nil
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
@@ -345,4 +373,12 @@ func splitOwnerRepo(fullname string) (owner, repo string, err error) {
 	owner = fullname[:idx]
 	repo = fullname[idx+1:]
 	return
+}
+
+func githubStatusCode(err error) (int, bool) {
+	var ghErr *github.UnexpectedStatusCodeError
+	if errors.As(err, &ghErr) {
+		return ghErr.StatusCode, true
+	}
+	return 0, false
 }

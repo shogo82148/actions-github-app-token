@@ -133,13 +133,13 @@ func (c *Client) ValidateAPIURL(url string) error {
 	return nil
 }
 
-type ErrUnexpectedStatusCode struct {
+type UnexpectedStatusCodeError struct {
 	StatusCode       int
 	Message          string
 	DocumentationURL string
 }
 
-func (err *ErrUnexpectedStatusCode) Error() string {
+func (err *UnexpectedStatusCodeError) Error() string {
 	var buf strings.Builder
 	buf.WriteString("unexpected status code: ")
 	buf.WriteString(strconv.Itoa(err.StatusCode))
@@ -154,19 +154,19 @@ func (err *ErrUnexpectedStatusCode) Error() string {
 	return buf.String()
 }
 
-func newErrUnexpectedStatusCode(resp *http.Response) *ErrUnexpectedStatusCode {
+func newErrUnexpectedStatusCode(resp *http.Response) *UnexpectedStatusCodeError {
 	var data struct {
 		Message          string `json:"message"`
 		DocumentationURL string `json:"documentation_url"`
 	}
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&data); err != nil {
-		return &ErrUnexpectedStatusCode{
+		return &UnexpectedStatusCodeError{
 			StatusCode: resp.StatusCode,
 			Message:    err.Error(),
 		}
 	}
-	return &ErrUnexpectedStatusCode{
+	return &UnexpectedStatusCodeError{
 		StatusCode:       resp.StatusCode,
 		Message:          data.Message,
 		DocumentationURL: data.DocumentationURL,
