@@ -24,6 +24,7 @@ import (
 type githubClient interface {
 	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
+	GetRepo(ctx context.Context, token, owner, repo string) (*github.GetRepoResponse, error)
 	GetReposInfo(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error)
 	GetReposContent(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
@@ -189,7 +190,7 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
 
-	repoIDs, err := h.getRepositoryIDs(ctx, inst.ID, req.Repositories)
+	repoIDs, err := h.getRepositoryIDs(ctx, inst.ID, owner, repo, req.Repositories)
 	if err != nil {
 		return nil, err
 	}
@@ -235,14 +236,24 @@ func (h *Handler) validateToken(ctx context.Context, token string) (*github.Acti
 	return id, nil
 }
 
-func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, nodeIDs []string) ([]uint64, error) {
+func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, owner, repo string, nodeIDs []string) ([]uint64, error) {
+	if len(nodeIDs) == 0 {
+		return []uint64{}, nil
+	}
+
 	resp, err := h.github.CreateAppAccessToken(ctx, inst, &github.CreateAppAccessTokenRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("failed create access token: %w", err)
 	}
+	token := resp.Token
+
+	detail, err := h.github.GetRepo(ctx, token, owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed create access token: %w", err)
+	}
+	log.Debug(ctx, detail.NodeID, nil)
 
 	var ret []uint64
-	token := resp.Token
 	for _, nodeID := range nodeIDs {
 		ctx := log.With(ctx, log.Fields{
 			"repository_node_id": nodeID,

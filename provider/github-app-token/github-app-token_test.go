@@ -11,6 +11,7 @@ import (
 type githubClientMock struct {
 	GetAppFunc               func(ctx context.Context) (*github.GetAppResponse, error)
 	GetReposInstallationFunc func(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
+	GetRepoFunc              func(ctx context.Context, token, owner, repo string) (*github.GetRepoResponse, error)
 	GetReposInfoFunc         func(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error)
 	GetReposContentFunc      func(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error)
 	CreateAppAccessTokenFunc func(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
@@ -24,6 +25,10 @@ func (c *githubClientMock) GetApp(ctx context.Context) (*github.GetAppResponse, 
 
 func (c *githubClientMock) GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error) {
 	return c.GetReposInstallationFunc(ctx, owner, repo)
+}
+
+func (c *githubClientMock) GetRepo(ctx context.Context, token, owner, repo string) (*github.GetRepoResponse, error) {
+	return c.GetRepoFunc(ctx, token, owner, repo)
 }
 
 func (c *githubClientMock) GetReposInfo(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error) {

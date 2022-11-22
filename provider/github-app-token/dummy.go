@@ -15,6 +15,13 @@ func (c *githubClientDummy) GetApp(ctx context.Context) (*github.GetAppResponse,
 	}, nil
 }
 
+func (c *githubClientDummy) GetRepo(ctx context.Context, token, owner, repo string) (*github.GetRepoResponse, error) {
+	return &github.GetRepoResponse{
+		ID:     "398574950",
+		NodeID: "R_kgDOF8HFZg",
+	}, nil
+}
+
 func (c *githubClientDummy) GetReposInfo(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error) {
 	return &github.GetReposInfoResponse{}, nil
 }
