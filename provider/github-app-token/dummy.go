@@ -2,6 +2,7 @@ package githubapptoken
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 	"github.com/shogo82148/goat/jwt"
@@ -27,10 +28,14 @@ func (c *githubClientDummy) GetReposInfo(ctx context.Context, token, nodeID stri
 }
 
 func (c *githubClientDummy) GetReposContent(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error) {
+	content := `
+repositories:
+	- R_kgDOF8HFZg
+`
 	return &github.GetReposContentResponse{
 		Type:     "file",
 		Encoding: "base64",
-		Content:  "",
+		Content:  base64.StdEncoding.EncodeToString([]byte(content)),
 	}, nil
 }
 

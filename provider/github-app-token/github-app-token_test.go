@@ -51,6 +51,16 @@ func (c *githubClientMock) ParseIDToken(ctx context.Context, idToken string) (*g
 	return c.ParseIDTokenFunc(ctx, idToken)
 }
 
+func TestHandle_Dummy(t *testing.T) {
+	h := NewDummyHandler()
+	_, err := h.handle(context.Background(), "dummy-token", &requestBody{
+		Repositories: []string{"R_123456"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestHandle(t *testing.T) {
 	h := &Handler{
 		github: &githubClientMock{
