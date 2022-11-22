@@ -19,6 +19,7 @@ import (
 	"github.com/shogo82148/aws-xray-yasdk-go/xray"
 	"github.com/shogo82148/aws-xray-yasdk-go/xrayhttp"
 	log "github.com/shogo82148/ctxlog"
+	"golang.org/x/sync/errgroup"
 )
 
 type githubClient interface {
@@ -273,20 +274,33 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 		return nil, fmt.Errorf("repo id is mismatch")
 	}
 
-	ret := make([]uint64, 0, len(nodeIDs)+1)
-	ret = append(ret, repoID)
+	ch := make(chan uint64, len(nodeIDs))
+	g, ctx := errgroup.WithContext(ctx)
 	for _, nodeID := range nodeIDs {
+		nodeID := nodeID
 		ctx := log.With(ctx, log.Fields{
 			"repository_node_id": nodeID,
 		})
+		g.Go(func() error {
+			id, err := h.checkPermission(ctx, token, nodeID, detail.NodeID)
+			if err != nil {
+				log.Debug(ctx, "permission denied", log.Fields{
+					"error": err.Error(),
+				})
+				return err
+			}
+			ch <- id
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, &forbiddenError{err: err}
+	}
+	close(ch)
 
-		id, err := h.checkPermission(ctx, token, nodeID, detail.NodeID)
-		if err != nil {
-			log.Debug(ctx, "permission denied", log.Fields{
-				"error": err.Error(),
-			})
-			return nil, &forbiddenError{err: err}
-		}
+	ret := make([]uint64, 0, len(nodeIDs)+1)
+	ret = append(ret, repoID)
+	for id := range ch {
 		ret = append(ret, id)
 	}
 	return ret, nil
