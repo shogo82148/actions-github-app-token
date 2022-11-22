@@ -111,10 +111,27 @@ type errorResponseBody struct {
 
 type validationError struct {
 	message string
+	err     error
 }
 
 func (err *validationError) Error() string {
 	return err.message
+}
+
+func (err *validationError) Unwrap() error {
+	return err.err
+}
+
+type forbiddenError struct {
+	err error
+}
+
+func (err *forbiddenError) Error() string {
+	return "forbidden: " + err.err.Error()
+}
+
+func (err *forbiddenError) Unwrap() error {
+	return err.err
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -277,7 +294,7 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 		})
 	}
 	if err := g.Wait(); err != nil {
-		return nil, err
+		return nil, &forbiddenError{err: err}
 	}
 	close(ch)
 
@@ -347,6 +364,15 @@ func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *htt
 		status = http.StatusBadRequest
 		body = &errorResponseBody{
 			Message: validation.message,
+		}
+	}
+
+	var forbidden *forbiddenError
+	if errors.As(err, &forbidden) {
+		status = http.StatusForbidden
+		body = &errorResponseBody{
+			Message: "Permission denied. " +
+				"Please check your repository has .github/actions.yaml",
 		}
 	}
 
