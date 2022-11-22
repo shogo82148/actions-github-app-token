@@ -9,11 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/shogo82148/goat/jwa"
-	"github.com/shogo82148/goat/jws"
-	"github.com/shogo82148/goat/jwt"
-	"github.com/shogo82148/goat/sig"
 )
 
 func TestGetReposContent(t *testing.T) {
@@ -32,27 +27,6 @@ func TestGetReposContent(t *testing.T) {
 			t.Errorf("unexpected Authorization header: %q", auth)
 			rw.WriteHeader(http.StatusUnauthorized)
 			return
-		}
-		auth = strings.TrimPrefix(auth, "Bearer ")
-		token, err := jwt.Parse([]byte(auth), jwt.FindKeyFunc(func(header *jws.Header) (sig.SigningKey, error) {
-			if want, got := jwa.RS256, header.Algorithm(); want != got {
-				t.Errorf("unexpected algorithm: want %s, got %s", want, got)
-			}
-			key, err := readPublicKeyForTest()
-			if err != nil {
-				return nil, err
-			}
-			return jwa.RS256.New().NewSigningKey(key), nil
-		}))
-		if err != nil {
-			t.Error(err)
-			rw.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		claims := token.Claims
-		iss := claims.Issuer
-		if iss != "123456" {
-			t.Errorf("unexpected issuer: want %q, got %q", "123456", iss)
 		}
 
 		path := "/repos/shogo82148/actions-github-app-token/contents/.github/actions.yaml"
