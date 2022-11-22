@@ -30,6 +30,7 @@ type githubClient interface {
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
 	ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
+	RevokeAppAccessToken(ctx context.Context, token string) error
 }
 
 const (
@@ -245,6 +246,7 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 		return nil, fmt.Errorf("failed create access token: %w", err)
 	}
 	token := resp.Token
+	defer h.github.RevokeAppAccessToken(ctx, token)
 
 	detail, err := h.github.GetRepo(ctx, token, owner, repo)
 	if err != nil {

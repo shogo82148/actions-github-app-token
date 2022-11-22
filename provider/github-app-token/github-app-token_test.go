@@ -2,6 +2,7 @@ package githubapptoken
 
 import (
 	"context"
+	"encoding/base64"
 	"testing"
 
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
@@ -17,6 +18,7 @@ type githubClientMock struct {
 	CreateAppAccessTokenFunc func(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURLFunc       func(url string) error
 	ParseIDTokenFunc         func(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
+	RevokeAppAccessTokenFunc func(ctx context.Context, token string) error
 }
 
 func (c *githubClientMock) GetApp(ctx context.Context) (*github.GetAppResponse, error) {
@@ -51,6 +53,10 @@ func (c *githubClientMock) ParseIDToken(ctx context.Context, idToken string) (*g
 	return c.ParseIDTokenFunc(ctx, idToken)
 }
 
+func (c *githubClientMock) RevokeAppAccessToken(ctx context.Context, token string) error {
+	return c.RevokeAppAccessTokenFunc(ctx, token)
+}
+
 func TestHandle_Dummy(t *testing.T) {
 	h := NewDummyHandler()
 	_, err := h.handle(context.Background(), "dummy-token", &requestBody{
@@ -62,6 +68,7 @@ func TestHandle_Dummy(t *testing.T) {
 }
 
 func TestHandle(t *testing.T) {
+	revoked := false
 	h := &Handler{
 		github: &githubClientMock{
 			ValidateAPIURLFunc: func(url string) error {
@@ -76,22 +83,68 @@ func TestHandle(t *testing.T) {
 					RepositoryID: "398574950",
 				}, nil
 			},
+			GetRepoFunc: func(ctx context.Context, token, owner, repo string) (*github.GetRepoResponse, error) {
+				if token != "ghs_dummyGitHubToken" {
+					t.Errorf("unexpected token: got %q, want %q", token, "ghs_dummyGitHubToken")
+				}
+				return &github.GetRepoResponse{
+					ID:     398574950,
+					NodeID: "R_kgDOF8HFZg",
+				}, nil
+			},
+			GetReposInfoFunc: func(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error) {
+				if token != "ghs_dummyGitHubToken" {
+					t.Errorf("unexpected token: got %q, want %q", token, "ghs_dummyGitHubToken")
+				}
+				return &github.GetReposInfoResponse{
+					ID:    398574950,
+					Owner: "shogo82148",
+					Name:  "actions-github-app-token",
+				}, nil
+			},
+			GetReposContentFunc: func(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error) {
+				if token != "ghs_dummyGitHubToken" {
+					t.Errorf("unexpected token: got %q, want %q", token, "ghs_dummyGitHubToken")
+				}
+				content := "repositories:\n  - R_kgDOF8HFZg\n"
+				return &github.GetReposContentResponse{
+					Type:     "file",
+					Encoding: "base64",
+					Content:  base64.StdEncoding.EncodeToString([]byte(content)),
+				}, nil
+			},
 			GetReposInstallationFunc: func(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error) {
-				return &github.GetReposInstallationResponse{}, nil
+				return &github.GetReposInstallationResponse{
+					ID: 641323,
+				}, nil
 			},
 			CreateAppAccessTokenFunc: func(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error) {
 				return &github.CreateAppAccessTokenResponse{
-					Token: "github-app-token",
+					Token: "ghs_dummyGitHubToken",
 				}, nil
+			},
+			RevokeAppAccessTokenFunc: func(ctx context.Context, token string) error {
+				if token != "ghs_dummyGitHubToken" {
+					t.Errorf("unexpected token: got %q, want %q", token, "ghs_dummyGitHubToken")
+				}
+				revoked = true
+				return nil
 			},
 		},
 		appID: 1234567890,
 	}
-	resp, err := h.handle(context.Background(), "dummy-token", &requestBody{})
+	resp, err := h.handle(context.Background(), "dummy-token", &requestBody{
+		Repositories: []string{
+			"R_kgDOIeornQ", "R_kgDOIevBqQ",
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.GitHubToken != "github-app-token" {
-		t.Errorf("unexpected token")
+	if resp.GitHubToken != "ghs_dummyGitHubToken" {
+		t.Errorf("unexpected token: got %q, want %q", resp.GitHubToken, "ghs_dummyGitHubToken")
+	}
+	if !revoked {
+		t.Error("want revoked, but not")
 	}
 }
