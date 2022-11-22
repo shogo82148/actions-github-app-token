@@ -65,6 +65,10 @@ func (c *githubClientDummy) ParseIDToken(ctx context.Context, idToken string) (*
 	}, nil
 }
 
+func (c *githubClientDummy) RevokeAppAccessToken(ctx context.Context, token string) error {
+	return nil
+}
+
 func NewDummyHandler() *Handler {
 	return &Handler{
 		github: &githubClientDummy{},
