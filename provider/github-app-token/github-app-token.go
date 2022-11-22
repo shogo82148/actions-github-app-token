@@ -249,7 +249,7 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, owner, repo
 
 	detail, err := h.github.GetRepo(ctx, token, owner, repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed create access token: %w", err)
+		return nil, fmt.Errorf("failed to get the repo: %w", err)
 	}
 	log.Debug(ctx, detail.NodeID, nil)
 

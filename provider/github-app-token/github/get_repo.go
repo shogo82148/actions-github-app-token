@@ -8,8 +8,8 @@ import (
 )
 
 type GetRepoResponse struct {
-	ID     uint64
-	NodeID string
+	ID     uint64 `json:"id"`
+	NodeID string `json:"node_id"`
 }
 
 // GetRepo gets a repository.
