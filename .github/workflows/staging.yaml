@@ -67,4 +67,6 @@ jobs:
         with:
           provider-endpoint: https://8y6823l0x3.execute-api.us-east-1.amazonaws.com
           app-id: "263885"
-          repositories: R_kgDOIeornQ
+          repositories: |
+            R_kgDOIeornQ
+            R_kgDOIevBqQ
