@@ -256,13 +256,20 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, nodeIDs []s
 		}
 		r, err := h.github.GetReposContent(ctx, token, resp.Owner, resp.Name, ".github/actions.yaml")
 		if err != nil {
-			log.Debug(ctx, "failed to actions.yaml", log.Fields{
+			log.Debug(ctx, "failed to get actions.yaml", log.Fields{
 				"error": err.Error(),
 			})
 		} else {
-			log.Debug(ctx, "success to actions.yaml", log.Fields{
-				"content": r.Content,
-			})
+			content, err := r.ParseFile()
+			if err != nil {
+				log.Debug(ctx, "failed to get actions.yaml", log.Fields{
+					"error": err.Error(),
+				})
+			} else {
+				log.Debug(ctx, "success to actions.yaml", log.Fields{
+					"content": content,
+				})
+			}
 		}
 		ret = append(ret, resp.ID)
 	}

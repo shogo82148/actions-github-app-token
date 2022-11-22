@@ -2,7 +2,9 @@ package github
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	gopath "path"
@@ -14,6 +16,16 @@ type GetReposContentResponse struct {
 	Content  string `json:"content"`
 
 	// omit other fields, we don't use them.
+}
+
+func (resp *GetReposContentResponse) ParseFile() ([]byte, error) {
+	if resp.Type != "file" {
+		return nil, fmt.Errorf("github: unexpected type: %q", resp.Type)
+	}
+	if resp.Encoding == "" {
+		return []byte(resp.Content), nil
+	}
+	return base64.StdEncoding.DecodeString(resp.Content)
 }
 
 // GetReposContent gets a repository content.

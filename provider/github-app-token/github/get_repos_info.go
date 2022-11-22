@@ -18,21 +18,21 @@ type GetReposInfoResponse struct {
 	ID    uint64
 }
 
-type getReposInfoResponse struct {
-	Data struct {
-		Node struct {
-			Owner struct {
-				Login string `json:"login"`
-			} `json:"owner"`
-			Name       string `json:"name"`
-			DatabaseID uint64 `json:"databaseId"`
-		} `json:"node"`
-	} `json:"data"`
-}
-
 // GetReposContent gets a repository content.
 // https://docs.github.com/en/rest/repos/contents#get-repository-content
 func (c *Client) GetReposInfo(ctx context.Context, token, nodeID string) (*GetReposInfoResponse, error) {
+	type getReposInfoResponse struct {
+		Data struct {
+			Node struct {
+				Owner struct {
+					Login string `json:"login"`
+				} `json:"owner"`
+				Name       string `json:"name"`
+				DatabaseID uint64 `json:"databaseId"`
+			} `json:"node"`
+		} `json:"data"`
+	}
+
 	const query = `query MyQuery($id: ID!) {
 node(id: $id) {
 	... on Repository {
