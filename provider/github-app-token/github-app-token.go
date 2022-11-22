@@ -24,6 +24,7 @@ type githubClient interface {
 	GetApp(ctx context.Context) (*github.GetAppResponse, error)
 	GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error)
 	GetReposInfo(ctx context.Context, token, nodeID string) (*github.GetReposInfoResponse, error)
+	GetReposContent(ctx context.Context, owner, repo, path string) (*github.GetReposContentResponse, error)
 	CreateAppAccessToken(ctx context.Context, installationID uint64, permissions *github.CreateAppAccessTokenRequest) (*github.CreateAppAccessTokenResponse, error)
 	ValidateAPIURL(url string) error
 	ParseIDToken(ctx context.Context, idToken string) (*github.ActionsIDToken, error)
@@ -243,19 +244,24 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, nodeIDs []s
 		return nil, fmt.Errorf("failed create access token: %w", err)
 	}
 
+	var ret []uint64
 	token := resp.Token
 	for _, nodeID := range nodeIDs {
+		log.Debug(ctx, "checking permission", log.Fields{
+			"node_id": nodeID,
+		})
 		resp, err := h.github.GetReposInfo(ctx, token, nodeID)
 		if err != nil {
 			return nil, err
 		}
-		log.Debug(ctx, "repository info", log.Fields{
-			"owner": resp.Owner,
-			"name":  resp.Name,
-			"id":    resp.ID,
+		r, err := h.github.GetReposContent(ctx, resp.Owner, resp.Name, ".github/actions.yaml")
+		log.Debug(ctx, "actions.yaml", log.Fields{
+			"content": r.Content,
+			"error":   err,
 		})
+		ret = append(ret, resp.ID)
 	}
-	return nil, nil
+	return ret, nil
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {

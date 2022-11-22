@@ -19,6 +19,14 @@ func (c *githubClientDummy) GetReposInfo(ctx context.Context, token, nodeID stri
 	return &github.GetReposInfoResponse{}, nil
 }
 
+func (c *githubClientDummy) GetReposContent(ctx context.Context, owner, repo, path string) (*github.GetReposContentResponse, error) {
+	return &github.GetReposContentResponse{
+		Type:     "file",
+		Encoding: "base64",
+		Content:  "",
+	}, nil
+}
+
 func (c *githubClientDummy) GetReposInstallation(ctx context.Context, owner, repo string) (*github.GetReposInstallationResponse, error) {
 	return &github.GetReposInstallationResponse{
 		ID: 123456,
