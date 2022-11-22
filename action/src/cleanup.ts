@@ -13,7 +13,7 @@ async function cleanup() {
     }
     const resp = await client.del(`${apiUrl}/installation/token`, {
       Authorization: `token ${token}`,
-      Accept: "application/vnd.github.v3+json",
+      Accept: "application/vnd.github+json",
     });
     const statusCode = resp.message.statusCode;
     if (statusCode === 204) {

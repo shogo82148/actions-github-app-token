@@ -1,6 +1,14 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
   Continuous Deployment settings for github-app-token
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - production
+      - staging
+
 Resources:
   # Permission Boundary for Roles
   PermissionsBoundary:
@@ -16,6 +24,7 @@ Resources:
             Action:
               - "logs:*"
               - "ssm:*"
+              - "xray:*"
             Resource: "*"
 
   # CloudFormation Service Role for deploying SAM templates
@@ -115,7 +124,7 @@ Resources:
             Condition:
               StringEquals:
                 "sts:ExternalId": "R_kgDOF8HFZg"
-                "aws:RequestTag/Environment": "production"
+                "aws:RequestTag/Environment": !Ref Environment
           - Effect: Allow
             Principal:
               AWS: arn:aws:iam::053160724612:root

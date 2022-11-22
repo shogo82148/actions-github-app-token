@@ -9,14 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/shogo82148/goat/jwa"
-	"github.com/shogo82148/goat/jws"
-	"github.com/shogo82148/goat/jwt"
-	"github.com/shogo82148/goat/sig"
 )
 
-func TestGetApp(t *testing.T) {
+func TestGetReposContent(t *testing.T) {
 	privateKey, err := os.ReadFile("./testdata/id_rsa_for_testing")
 	if err != nil {
 		t.Fatal(err)
@@ -33,34 +28,13 @@ func TestGetApp(t *testing.T) {
 			rw.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		auth = strings.TrimPrefix(auth, "Bearer ")
-		token, err := jwt.Parse([]byte(auth), jwt.FindKeyFunc(func(header *jws.Header) (sig.SigningKey, error) {
-			if want, got := jwa.RS256, header.Algorithm(); want != got {
-				t.Errorf("unexpected algorithm: want %s, got %s", want, got)
-			}
-			key, err := readPublicKeyForTest()
-			if err != nil {
-				return nil, err
-			}
-			return jwa.RS256.New().NewSigningKey(key), nil
-		}))
-		if err != nil {
-			t.Error(err)
-			rw.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		claims := token.Claims
-		iss := claims.Issuer
-		if iss != "123456" {
-			t.Errorf("unexpected issuer: want %q, got %q", "123456", iss)
-		}
 
-		path := "/app"
+		path := "/repos/shogo82148/actions-github-app-token/contents/.github/actions.yaml"
 		if r.URL.Path != path {
 			t.Errorf("unexpected path: want %q, got %q", path, r.URL.Path)
 		}
 
-		data, err := os.ReadFile("testdata/app.json")
+		data, err := os.ReadFile("testdata/repos-content.json")
 		if err != nil {
 			panic(err)
 		}
@@ -80,11 +54,11 @@ func TestGetApp(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := c.GetApp(context.Background())
+	resp, err := c.GetReposContent(context.Background(), "secret", "shogo82148", "actions-github-app-token", "../.github/workflows/../actions.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.HTMLURL != "https://github.com/apps/octoapp" {
-		t.Errorf("unexpected html url: want %q, got %q", "https://github.com/apps/octoapp", resp.HTMLURL)
+	if resp.Type != "file" {
+		t.Errorf("got %q, want %q", resp.Type, "file")
 	}
 }

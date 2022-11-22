@@ -1,0 +1,80 @@
+name: deploy to staging
+on:
+  push:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      statuses: write
+      contents: read
+    environment: staging
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+
+      - name: Set up Go
+        uses: actions/setup-go@c4a742cab115ed795e34d4513e2cf7d472deb55f # v3.3.1
+        with:
+          cache: true
+          go-version-file: provider/github-app-token/go.mod
+          cache-dependency-path: provider/github-app-token/go.sum
+
+      - name: build
+        run: |
+          make build
+        working-directory: provider
+
+      - uses: fuller-inc/actions-aws-assume-role@ee49a108ae9920a17c4abf0931f30935fea2d2b0 # v1.5.3
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::616212855146:role/github-app-token-github-actions-us-east-1
+          role-session-tagging: true
+          use-node-id: true
+
+      - name: deploy
+        run: |
+          make deploy
+        working-directory: provider
+        env:
+          APP_ENV: staging
+
+      - name: Set up Node.js
+        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3.5.1
+        with:
+          node-version: "16.x"
+          cache: "npm"
+          cache-dependency-path: action/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+        working-directory: action
+
+      - name: Build
+        run: |
+          npm run build
+        working-directory: action
+
+      - id: generate
+        name: Use the action
+        uses: ./
+        with:
+          provider-endpoint: https://8y6823l0x3.execute-api.us-east-1.amazonaws.com
+          app-id: "263885"
+          repositories: |
+            R_kgDOIeornQ
+            R_kgDOIevBqQ
+
+      - name: Check out code
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+        with:
+          repository: 'shogo82148/improved-lamp'
+          path: improved-lamp
+          token: ${{ steps.generate.outputs.token }}
