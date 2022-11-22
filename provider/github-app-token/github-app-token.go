@@ -119,9 +119,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	traceID := xray.ContextTraceID(ctx)
 	ctx = log.With(ctx, log.Fields{
-		"amzn_trace_id": traceID,
+		"amzn_trace_id": w.Header().Get("X-Amzn-Trace-Id"),
 	})
 
 	data, err := io.ReadAll(r.Body)
