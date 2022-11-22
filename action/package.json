@@ -1,6 +1,6 @@
 {
   "name": "actions-aws-assume-role",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Get GitHub App Token in GitHub Actions",
   "main": "lib/index.js",
   "scripts": {

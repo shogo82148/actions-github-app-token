@@ -26,20 +26,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.assumeRole = void 0;
 const core = __importStar(require("@actions/core"));
 const http = __importStar(require("@actions/http-client"));
-function assertIsDefined(val) {
-    if (val === undefined || val === null) {
-        throw new Error(`Missing required environment value. Are you running in GitHub Actions?`);
-    }
-}
 async function assumeRole(params) {
-    const { GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
-    assertIsDefined(GITHUB_REPOSITORY);
-    assertIsDefined(GITHUB_SHA);
     const GITHUB_API_URL = process.env["GITHUB_API_URL"] || "https://api.github.com";
     const payload = {
         api_url: GITHUB_API_URL,
-        repository: GITHUB_REPOSITORY,
-        sha: GITHUB_SHA,
+        repositories: params.repositories,
     };
     const headers = {};
     if (!isIdTokenAvailable()) {
@@ -79,9 +70,11 @@ async function run() {
         const providerEndpoint = core.getInput("provider-endpoint") || defaultProviderEndpoint;
         const appID = core.getInput("app-id") || defaultAppID;
         const audience = audiencePrefix + appID;
+        const repositories = core.getInput("repositories").split(/\s+/);
         await assumeRole({
             providerEndpoint,
             audience,
+            repositories,
         });
     }
     catch (error) {
