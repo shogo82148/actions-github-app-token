@@ -11,6 +11,7 @@ require (
 	github.com/shogo82148/ctxlog v0.1.0
 	github.com/shogo82148/goat v0.0.5
 	github.com/shogo82148/ridgenative v1.2.1
+	golang.org/x/sync v0.1.0
 )
 
 require (
