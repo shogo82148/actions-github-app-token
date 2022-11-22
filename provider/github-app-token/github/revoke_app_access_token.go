@@ -11,7 +11,7 @@ import (
 func (c *Client) RevokeAppAccessToken(ctx context.Context, token string) error {
 	// build the request
 	u := c.baseURL.JoinPath("installation", "token")
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, u.String(), nil)
 	if err != nil {
 		return err
 	}
