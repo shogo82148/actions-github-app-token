@@ -190,16 +190,15 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		return nil, fmt.Errorf("failed to get resp's installation: %w", err)
 	}
 
-	repoIDs, err := h.getRepositoryIDs(ctx, inst.ID, owner, repo, req.Repositories)
-	if err != nil {
-		return nil, err
-	}
-
 	repoID, err := strconv.ParseUint(id.RepositoryID, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-	repoIDs = append(repoIDs, repoID)
+	repoIDs, err := h.getRepositoryIDs(ctx, inst.ID, repoID, owner, repo, req.Repositories)
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
 		RepositoryIDs: repoIDs,
 	})
@@ -236,9 +235,9 @@ func (h *Handler) validateToken(ctx context.Context, token string) (*github.Acti
 	return id, nil
 }
 
-func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, owner, repo string, nodeIDs []string) ([]uint64, error) {
+func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, owner, repo string, nodeIDs []string) ([]uint64, error) {
 	if len(nodeIDs) == 0 {
-		return []uint64{}, nil
+		return []uint64{repoID}, nil
 	}
 
 	resp, err := h.github.CreateAppAccessToken(ctx, inst, &github.CreateAppAccessTokenRequest{})
@@ -251,15 +250,18 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, owner, repo
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the repo: %w", err)
 	}
-	log.Debug(ctx, detail.NodeID, nil)
+	if detail.ID != repoID {
+		return nil, fmt.Errorf("repo id is mismatch")
+	}
 
-	var ret []uint64
+	ret := make([]uint64, 0, len(nodeIDs)+1)
+	ret = append(ret, repoID)
 	for _, nodeID := range nodeIDs {
 		ctx := log.With(ctx, log.Fields{
 			"repository_node_id": nodeID,
 		})
 
-		id, err := h.checkPermission(ctx, token, nodeID)
+		id, err := h.checkPermission(ctx, token, nodeID, detail.NodeID)
 		if err != nil {
 			log.Debug(ctx, "permission denied", log.Fields{
 				"error": err.Error(),
@@ -271,9 +273,9 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst uint64, owner, repo
 	return ret, nil
 }
 
-func (h *Handler) checkPermission(ctx context.Context, token, nodeID string) (uint64, error) {
+func (h *Handler) checkPermission(ctx context.Context, token, to, from string) (uint64, error) {
 	log.Debug(ctx, "checking permission", nil)
-	info, err := h.github.GetReposInfo(ctx, token, nodeID)
+	info, err := h.github.GetReposInfo(ctx, token, to)
 	if err != nil {
 		return 0, err
 	}
@@ -281,7 +283,7 @@ func (h *Handler) checkPermission(ctx context.Context, token, nodeID string) (ui
 	log.Debug(ctx, "fetching .github/actions.yaml", nil)
 	resp, err := h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yaml")
 	if err == nil {
-		return h.checkConfig(ctx, info, resp)
+		return h.checkConfig(ctx, info, resp, from)
 	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
 		return 0, fmt.Errorf("failed to fetch .github/actions.yaml: %w", err)
 	}
@@ -290,7 +292,7 @@ func (h *Handler) checkPermission(ctx context.Context, token, nodeID string) (ui
 	log.Debug(ctx, "fetching .github/actions.yml", nil)
 	resp, err = h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yml")
 	if err == nil {
-		return h.checkConfig(ctx, info, resp)
+		return h.checkConfig(ctx, info, resp, from)
 	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
 		return 0, fmt.Errorf("failed to fetch .github/actions.yml: %w", err)
 	}
@@ -299,7 +301,7 @@ func (h *Handler) checkPermission(ctx context.Context, token, nodeID string) (ui
 	return 0, errors.New("config file is not found")
 }
 
-func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResponse, resp *github.GetReposContentResponse) (uint64, error) {
+func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResponse, resp *github.GetReposContentResponse, from string) (uint64, error) {
 	content, err := resp.ParseFile()
 	if err != nil {
 		return 0, err
@@ -311,8 +313,12 @@ func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResp
 		return 0, err
 	}
 
-	// TODO: check config
-	return info.ID, nil
+	for _, nodeID := range config.Repositories {
+		if nodeID == from {
+			return info.ID, nil
+		}
+	}
+	return 0, errors.New("permission denied")
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
