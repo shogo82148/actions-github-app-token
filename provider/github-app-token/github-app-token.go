@@ -135,12 +135,14 @@ func (err *forbiddenError) Unwrap() error {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := log.With(r.Context(), log.Fields{
+		"x-amzn-trace-id": xray.ContextTraceID(r.Context()),
+	})
+
 	if r.Method != http.MethodPost {
 		h.handleMethodNotAllowed(w)
 		return
 	}
-
-	ctx := r.Context()
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
