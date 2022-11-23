@@ -280,6 +280,9 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 	g, ctx := errgroup.WithContext(ctx)
 	for _, nodeID := range nodeIDs {
 		nodeID := nodeID
+		if nodeID == "" {
+			continue
+		}
 		ctx := log.With(ctx, log.Fields{
 			"repository_node_id": nodeID,
 		})
