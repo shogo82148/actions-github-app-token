@@ -62,6 +62,12 @@ function isIdTokenAvailable() {
     const url = process.env["ACTIONS_ID_TOKEN_REQUEST_URL"];
     return token && url ? true : false;
 }
+function parseRepositories(s) {
+    if (!s) {
+        return [];
+    }
+    return s.split(/\s+/);
+}
 async function run() {
     const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
     const defaultAppID = "136245";
@@ -70,7 +76,7 @@ async function run() {
         const providerEndpoint = core.getInput("provider-endpoint") || defaultProviderEndpoint;
         const appID = core.getInput("app-id") || defaultAppID;
         const audience = audiencePrefix + appID;
-        const repositories = core.getInput("repositories").split(/\s+/);
+        const repositories = parseRepositories(core.getInput("repositories"));
         await assumeRole({
             providerEndpoint,
             audience,
