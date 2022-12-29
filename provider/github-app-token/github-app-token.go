@@ -135,12 +135,14 @@ func (err *forbiddenError) Unwrap() error {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := log.With(r.Context(), log.Fields{
+		"x-amzn-trace-id": xray.ContextTraceID(r.Context()),
+	})
+
 	if r.Method != http.MethodPost {
 		h.handleMethodNotAllowed(w)
 		return
 	}
-
-	ctx := r.Context()
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -278,6 +280,9 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 	g, ctx := errgroup.WithContext(ctx)
 	for _, nodeID := range nodeIDs {
 		nodeID := nodeID
+		if nodeID == "" {
+			continue
+		}
 		ctx := log.With(ctx, log.Fields{
 			"repository_node_id": nodeID,
 		})
