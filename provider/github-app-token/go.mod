@@ -10,12 +10,12 @@ require (
 	github.com/shogo82148/aws-xray-yasdk-go v1.5.2
 	github.com/shogo82148/ctxlog v0.1.0
 	github.com/shogo82148/goat v0.0.5
-	github.com/shogo82148/ridgenative v1.2.1
+	github.com/shogo82148/ridgenative v1.3.0
 	golang.org/x/sync v0.1.0
 )
 
 require (
-	github.com/aws/aws-lambda-go v1.32.0 // indirect
+	github.com/aws/aws-lambda-go v1.36.1 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.7 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.27 // indirect
