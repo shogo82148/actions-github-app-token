@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/shogo82148/goat/jws"
 	"github.com/shogo82148/goat/jwt"
@@ -11,6 +12,7 @@ import (
 )
 
 // GitHub's custom claims
+// https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect
 type ActionsIDToken struct {
 	*jwt.Claims
 	Environment          string `jwt:"environment"`
@@ -63,5 +65,9 @@ func (c *Client) ParseIDToken(ctx context.Context, idToken string) (*ActionsIDTo
 		return nil, fmt.Errorf("github: failed to parse id token: %w", err)
 	}
 	claims.Claims = token.Claims
+
+	if !strings.HasPrefix(claims.Claims.Subject, fmt.Sprintf("repo:%s:", claims.Repository)) {
+		return nil, errors.New("github: failed to parse id token: invalid subject")
+	}
 	return &claims, nil
 }
