@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/shogo82148/goat/jws"
@@ -67,9 +66,7 @@ func (c *Client) ParseIDToken(ctx context.Context, idToken string) (*ActionsIDTo
 	}
 	claims.Claims = token.Claims
 
-	if !strings.HasPrefix(claims.Claims.Subject, fmt.Sprintf("repo:%s/%s:", claims.RepositoryOwner, claims.Repository)) {
-		log.Println("want:", fmt.Sprintf("repo:%s/%s:", claims.RepositoryOwner, claims.Repository))
-		log.Println("got: ", claims.Claims.Subject)
+	if !strings.HasPrefix(claims.Claims.Subject, fmt.Sprintf("repo:%s:", claims.Repository)) {
 		return nil, errors.New("github: failed to parse id token: invalid subject")
 	}
 	return &claims, nil
