@@ -232,6 +232,7 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	}, nil
 }
 
+// contains returns true if the slice contains s.
 func contains(slice []string, s string) bool {
 	for _, v := range slice {
 		if v == s {
@@ -241,6 +242,7 @@ func contains(slice []string, s string) bool {
 	return false
 }
 
+// validateToken validates the token and returns the token's payload.
 func (h *Handler) validateToken(ctx context.Context, token string) (*github.ActionsIDToken, error) {
 	id, err := h.github.ParseIDToken(ctx, token)
 	if err != nil {
@@ -426,16 +428,15 @@ func (h *Handler) getAuthToken(header http.Header) (string, error) {
 	return v[len(prefix):], nil
 }
 
+// splitOwnerRepo splits full name into owner and repository name.
 func splitOwnerRepo(fullname string) (owner, repo string, err error) {
-	idx := strings.IndexByte(fullname, '/')
-	if idx < 0 {
+	owner, repo, ok := strings.Cut(fullname, "/")
+	if !ok {
 		err = &validationError{
 			message: fmt.Sprintf("invalid repository name: %s", fullname),
 		}
 		return
 	}
-	owner = fullname[:idx]
-	repo = fullname[idx+1:]
 	return
 }
 
