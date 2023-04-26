@@ -41,9 +41,8 @@ Resources:
           GITHUB_APP_ID: !Ref AppId
           GITHUB_PRIVATE_KEY: !Ref PrivateKey
       Policies:
-        - SSMParameterReadPolicy:
-            # HACK: trim "/" prefix. See https://github.com/aws/serverless-application-model/issues/1112
-            ParameterName: !Join ["", !Split ["^/", !Sub "^${AppId}"]]
-        - SSMParameterReadPolicy:
-            ParameterName: !Join ["", !Split ["^/", !Sub "^${PrivateKey}"]]
+        - SSMParameterWithSlashPrefixReadPolicy:
+            ParameterName: !Ref AppId
+        - SSMParameterWithSlashPrefixReadPolicy:
+            ParameterName: !Ref PrivateKey
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
