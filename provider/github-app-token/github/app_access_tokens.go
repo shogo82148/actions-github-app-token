@@ -27,6 +27,7 @@ type CreateAppAccessTokenRequestPermissions struct {
 	RepositoryProjects string `json:"repository_projects,omitempty"`
 	SecurityEvents     string `json:"security_events,omitempty"`
 	Statuses           string `json:"statuses,omitempty"`
+	SingleFile         string `json:"single_file,omitempty"`
 
 	// omit other fields, we don't use them.
 }

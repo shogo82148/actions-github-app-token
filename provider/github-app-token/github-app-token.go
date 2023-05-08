@@ -263,7 +263,11 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 		return []uint64{repoID}, nil
 	}
 
-	resp, err := h.github.CreateAppAccessToken(ctx, inst, &github.CreateAppAccessTokenRequest{})
+	resp, err := h.github.CreateAppAccessToken(ctx, inst, &github.CreateAppAccessTokenRequest{
+		Permissions: &github.CreateAppAccessTokenRequestPermissions{
+			SingleFile: "read",
+		},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed create access token: %w", err)
 	}
