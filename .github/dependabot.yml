@@ -1,5 +1,5 @@
 # Please see the documentation for all configuration options:
-# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
 updates:
@@ -11,6 +11,12 @@ updates:
       # update too often, ignore patch releases
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-patch"]
+    groups:
+      jest-monorepo:
+        patterns:
+          - jest
+          - jest-circus
+
   - package-ecosystem: "gomod"
     directory: "/provider/github-app-token"
     schedule:
