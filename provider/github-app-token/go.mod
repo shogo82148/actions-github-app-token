@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.21.0
-	github.com/aws/aws-sdk-go-v2/config v1.18.36
+	github.com/aws/aws-sdk-go-v2/config v1.18.37
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5
 	github.com/goccy/go-yaml v1.11.0
 	github.com/shogo82148/aws-xray-yasdk-go v1.5.2
