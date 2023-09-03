@@ -1,6 +1,6 @@
 name: "GitHub App Token"
 description: "Run GitHub Actions as a GitHub App instead of using secrets.GITHUB_TOKEN or a personal access token."
-author: "Ichinose Shogo"
+author: "ICHINOSE Shogo"
 inputs:
   provider-endpoint:
     description: "URL for credential provider"
