@@ -47,8 +47,8 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/shogo82148/aws-xray-yasdk-go v1.5.2 h1:rXKJ3mD4H5GWottzYHrKHQ0S90QWEtA9p+BK93FN2xQ=
-github.com/shogo82148/aws-xray-yasdk-go v1.5.2/go.mod h1:oz8SCOMbtQvC6TbfMKVzl6aJjpiaqwvATlV6RN0vJ3Q=
+github.com/shogo82148/aws-xray-yasdk-go v1.6.0 h1:lS2FJKaoteHbf+fQuqisqROUwq3NOZ3B/qFA/YIKVWc=
+github.com/shogo82148/aws-xray-yasdk-go v1.6.0/go.mod h1:oz8SCOMbtQvC6TbfMKVzl6aJjpiaqwvATlV6RN0vJ3Q=
 github.com/shogo82148/ctxlog v0.1.0 h1:WN1kcHxnFFPrqMNKK+ZM8GKrjqAKQymWekjeq6EZ7ao=
 github.com/shogo82148/ctxlog v0.1.0/go.mod h1:1vzyF5O3lITc5QGi4oYH12DwupLpZytmfxdN2vH1ZZ0=
 github.com/shogo82148/goat v0.0.6 h1:QmNrB8HnXOt7BFaS8i890aBo4RRbiXVWcgSagd97S7Q=
