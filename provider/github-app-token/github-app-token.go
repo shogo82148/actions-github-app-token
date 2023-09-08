@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,7 +19,6 @@ import (
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 	"github.com/shogo82148/aws-xray-yasdk-go/xray"
 	"github.com/shogo82148/aws-xray-yasdk-go/xrayhttp"
-	log "github.com/shogo82148/ctxlog"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -42,6 +42,10 @@ type Handler struct {
 	github githubClient
 	app    *github.GetAppResponse
 	appID  uint64
+}
+
+func errAttr(err error) slog.Attr {
+	return slog.String("error", err.Error())
 }
 
 func NewHandler() (*Handler, error) {
@@ -135,10 +139,7 @@ func (err *forbiddenError) Unwrap() error {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := log.With(r.Context(), log.Fields{
-		"x-amzn-trace-id": xray.ContextTraceID(r.Context()),
-	})
-
+	ctx := r.Context()
 	if r.Method != http.MethodPost {
 		h.handleMethodNotAllowed(w)
 		return
@@ -170,9 +171,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Error(ctx, "failed to write the response", log.Fields{
-			"error": err.Error(),
-		})
+		slog.ErrorContext(ctx, "failed to write the response", errAttr(err))
 	}
 }
 
@@ -285,19 +284,14 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 	ch := make(chan uint64, len(nodeIDs))
 	g, ctx := errgroup.WithContext(ctx)
 	for _, nodeID := range nodeIDs {
-		nodeID := nodeID
 		if nodeID == "" {
 			continue
 		}
-		ctx := log.With(ctx, log.Fields{
-			"repository_node_id": nodeID,
-		})
+		nodeID := nodeID
 		g.Go(func() error {
 			id, err := h.checkPermission(ctx, token, nodeID, detail.NodeID)
 			if err != nil {
-				log.Debug(ctx, "permission denied", log.Fields{
-					"error": err.Error(),
-				})
+				slog.DebugContext(ctx, "permission denied", errAttr(err), slog.String("repository_node_id", nodeID))
 				return err
 			}
 			ch <- id
@@ -318,29 +312,29 @@ func (h *Handler) getRepositoryIDs(ctx context.Context, inst, repoID uint64, own
 }
 
 func (h *Handler) checkPermission(ctx context.Context, token, to, from string) (uint64, error) {
-	log.Debug(ctx, "checking permission", nil)
+	slog.DebugContext(ctx, "checking permission", slog.String("repository_node_id", to))
 	info, err := h.github.GetReposInfo(ctx, token, to)
 	if err != nil {
 		return 0, err
 	}
 
-	log.Debug(ctx, "fetching .github/actions.yaml", nil)
+	slog.DebugContext(ctx, "fetching .github/actions.yaml", slog.String("repository_node_id", to))
 	resp, err := h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yaml")
 	if err == nil {
 		return h.checkConfig(ctx, info, resp, from)
 	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
 		return 0, fmt.Errorf("failed to fetch .github/actions.yaml: %w", err)
 	}
-	log.Debug(ctx, ".github/actions.yaml not found", nil)
+	slog.DebugContext(ctx, ".github/actions.yaml not found", slog.String("repository_node_id", to))
 
-	log.Debug(ctx, "fetching .github/actions.yml", nil)
+	slog.DebugContext(ctx, "fetching .github/actions.yml", slog.String("repository_node_id", to))
 	resp, err = h.github.GetReposContent(ctx, token, info.Owner, info.Name, ".github/actions.yml")
 	if err == nil {
 		return h.checkConfig(ctx, info, resp, from)
 	} else if status, ok := githubStatusCode(err); !ok || status != http.StatusNotFound {
 		return 0, fmt.Errorf("failed to fetch .github/actions.yml: %w", err)
 	}
-	log.Debug(ctx, ".github/actions.yml not found", nil)
+	slog.DebugContext(ctx, ".github/actions.yml not found", slog.String("repository_node_id", to))
 
 	return 0, errors.New("config file is not found")
 }
@@ -366,7 +360,7 @@ func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResp
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
-	log.Error(ctx, err.Error(), nil)
+	slog.WarnContext(ctx, "error", errAttr(err))
 	status := http.StatusInternalServerError
 	var body *errorResponseBody
 

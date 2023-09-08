@@ -7,8 +7,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.39
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5
 	github.com/goccy/go-yaml v1.11.0
-	github.com/shogo82148/aws-xray-yasdk-go v1.6.0
-	github.com/shogo82148/ctxlog v0.1.0
+	github.com/shogo82148/aws-xray-yasdk-go v1.7.0
+	github.com/shogo82148/go-http-logger v1.3.0
 	github.com/shogo82148/goat v0.0.6
 	github.com/shogo82148/ridgenative v1.4.0
 	golang.org/x/sync v0.3.0
@@ -34,4 +34,5 @@ require (
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
