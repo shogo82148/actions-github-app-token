@@ -12,11 +12,14 @@ import (
 	"github.com/shogo82148/ridgenative"
 )
 
+var logger *slog.Logger
+
 func init() {
 	// initialize the logger
 	h1 := slog.NewJSONHandler(os.Stderr, nil)
 	h2 := xrayslog.NewHandler(h1, "trace_id")
-	slog.SetDefault(slog.New(h2))
+	logger = slog.New(h2)
+	slog.SetDefault(logger)
 	xraylog.SetLogger(xrayslog.NewXRayLogger(h2))
 }
 
@@ -29,7 +32,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", h)
 
-	logger := httplogger.NewSlogLogger(slog.LevelInfo, "message for http access", slog.Default())
+	logger := httplogger.NewSlogLogger(slog.LevelInfo, "message for http access", logger)
 
 	err = ridgenative.ListenAndServe(":8080", httplogger.LoggingHandler(logger, mux))
 	if err != nil {
