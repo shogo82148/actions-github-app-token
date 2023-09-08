@@ -8,6 +8,9 @@
     "format": "prettier --write **/*.ts",
     "test": "jest"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "author": "ICHINOSE Shogo",
   "license": "MIT",
   "dependencies": {
