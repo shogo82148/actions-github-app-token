@@ -1,6 +1,6 @@
 module github.com/shogo82148/actions-github-app-token/provider/github-app-token
 
-go 1.21.0
+go 1.21.1
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.21.0
