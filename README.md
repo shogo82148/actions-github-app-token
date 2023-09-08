@@ -41,7 +41,7 @@ sam deploy
 jobs:
   job:
     runs-on: ubuntu-latest
-    # use GitHub Actions OIDC Token (Experimental) https://github.com/github/roadmap/issues/249
+    # use GitHub Actions OIDC Token
     permissions:
       id-token: write
       contents: read

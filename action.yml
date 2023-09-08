@@ -1,4 +1,4 @@
-name: "GitHub App Token"
+name: "Create GitHub App Token using OpenID Connect"
 description: "Run GitHub Actions as a GitHub App instead of using secrets.GITHUB_TOKEN or a personal access token."
 author: "ICHINOSE Shogo"
 inputs:
