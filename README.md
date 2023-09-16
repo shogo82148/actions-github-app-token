@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - id: generate
-        uses: shogo82148/actions-github-app-token@v0
+        uses: shogo82148/actions-github-app-token@v1
         # Optional (defaults to My Demonstration App).
         # with:
         #   provider-endpoint: https://EXAMPLE.execute-api.us-east-1.amazonaws.com/
