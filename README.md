@@ -58,8 +58,20 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate.outputs.token }}
 ```
 
+## How It Works
+
+![How to Work](how-to-work.svg)
+
+1. Request a new credential with OIDC (OpenID Connect) Token.\
+   The `shogo82148/actions-github-app-token` action sends a temporary id token to the credential token vendor.
+2. The vendor signs the request using the long term credential.\
+   The long term credential doesn't leave AWS environment. It keeps the workflow safer.
+3. The vendor a new credential with JWT (JSON Web Token).
+4. GitHub returns a temporary credential.
+
 ## Related Works
 
+- [actions/create-github-app-token](https://github.com/actions/create-github-app-token)
 - [jwenz723/github-app-installation-token](https://github.com/jwenz723/github-app-installation-token)
 - [tibdex/github-app-token](https://github.com/tibdex/github-app-token)
 - [getsentry/action-github-app-token](https://github.com/getsentry/action-github-app-token)
