@@ -52,8 +52,8 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/shogo82148/aws-xray-yasdk-go v1.7.0 h1:A3Jg9j+k3au1sol0YppvyWF4Dm6BvPOpudoNPdlzEyM=
-github.com/shogo82148/aws-xray-yasdk-go v1.7.0/go.mod h1:oz8SCOMbtQvC6TbfMKVzl6aJjpiaqwvATlV6RN0vJ3Q=
+github.com/shogo82148/aws-xray-yasdk-go v1.7.1 h1:S3ehDH+aJzrhilX5KoJBsegkWu7UF22O1a2BcPValx4=
+github.com/shogo82148/aws-xray-yasdk-go v1.7.1/go.mod h1:oz8SCOMbtQvC6TbfMKVzl6aJjpiaqwvATlV6RN0vJ3Q=
 github.com/shogo82148/go-http-logger v1.3.0 h1:4mTca6oyIXZrBXVrwzCdu3oWzI8r8aaBbM7sTsZituk=
 github.com/shogo82148/go-http-logger v1.3.0/go.mod h1:kT0vCPqUkYd9WVdLvZIQ0nIl/atEdfuyJCIpsBLOqz8=
 github.com/shogo82148/goat v0.0.6 h1:QmNrB8HnXOt7BFaS8i890aBo4RRbiXVWcgSagd97S7Q=
