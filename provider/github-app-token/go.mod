@@ -11,7 +11,7 @@ require (
 	github.com/shogo82148/go-http-logger v1.3.0
 	github.com/shogo82148/goat v0.0.6
 	github.com/shogo82148/ridgenative v1.4.0
-	golang.org/x/sync v0.3.0
+	golang.org/x/sync v0.4.0
 )
 
 require (
