@@ -9,7 +9,7 @@ require (
 	github.com/goccy/go-yaml v1.11.2
 	github.com/shogo82148/aws-xray-yasdk-go v1.7.1
 	github.com/shogo82148/go-http-logger v1.3.0
-	github.com/shogo82148/goat v0.0.6
+	github.com/shogo82148/goat v0.0.7-0.20231008041607-e11514df9d02
 	github.com/shogo82148/ridgenative v1.4.0
 	golang.org/x/sync v0.4.0
 )
@@ -30,9 +30,9 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/shogo82148/memoize v0.0.2 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
+	github.com/shogo82148/memoize v0.0.3 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
