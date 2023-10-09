@@ -56,10 +56,10 @@ github.com/shogo82148/aws-xray-yasdk-go v1.7.1 h1:S3ehDH+aJzrhilX5KoJBsegkWu7UF2
 github.com/shogo82148/aws-xray-yasdk-go v1.7.1/go.mod h1:oz8SCOMbtQvC6TbfMKVzl6aJjpiaqwvATlV6RN0vJ3Q=
 github.com/shogo82148/go-http-logger v1.3.0 h1:4mTca6oyIXZrBXVrwzCdu3oWzI8r8aaBbM7sTsZituk=
 github.com/shogo82148/go-http-logger v1.3.0/go.mod h1:kT0vCPqUkYd9WVdLvZIQ0nIl/atEdfuyJCIpsBLOqz8=
-github.com/shogo82148/goat v0.0.7-0.20231008041607-e11514df9d02 h1:aK7B/rM9iuN0dxxONYEoxyy26BkelQ6AW7g5x+0lO14=
-github.com/shogo82148/goat v0.0.7-0.20231008041607-e11514df9d02/go.mod h1:wdexg/SutyUH1M9DlBW4be73zmklR0MvRXUxLyJuDnQ=
-github.com/shogo82148/memoize v0.0.3 h1:dgPkeH6TM9Vu0hXC0UfeSBEIQVL6i0Q9nscBh5CJZAs=
-github.com/shogo82148/memoize v0.0.3/go.mod h1:sOsvhOlJGVR2nHgCzUchvbEeYB6jNvSP9o4SPHgb+bY=
+github.com/shogo82148/goat v0.1.0 h1:CD8v23E0rGSspMyKnS2FqiX+BJnEYs/mhgYDmo4i30k=
+github.com/shogo82148/goat v0.1.0/go.mod h1:O2/1GBUA42rPuc0TM5WV3Kx/5/BXCHBRvSh/g9MlAus=
+github.com/shogo82148/memoize v0.0.4 h1:3n08PzuwGLbVwawf2jM5kfNC4mV25EqaAIjKrNfqqAs=
+github.com/shogo82148/memoize v0.0.4/go.mod h1:sOsvhOlJGVR2nHgCzUchvbEeYB6jNvSP9o4SPHgb+bY=
 github.com/shogo82148/pointer v1.3.0 h1:LW5V2jUAjFNjS8e7k/PgFoh3EavOSB/vvN85aGue5+I=
 github.com/shogo82148/pointer v1.3.0/go.mod h1:agZ5JFpavFPXznbWonIvbG78NDfvDTFppe+7o53up5w=
 github.com/shogo82148/ridgenative v1.4.0 h1:yBsshqKQ86Y155CzgW3iC34DPwpcClceCJ8JQBd36UE=
