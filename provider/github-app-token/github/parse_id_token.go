@@ -55,7 +55,7 @@ func (c *Client) ParseIDToken(ctx context.Context, idToken string) (*ActionsIDTo
 			key = header.Algorithm().New().NewSigningKey(jwk)
 			return
 		}),
-		AlgorithmVerfier:      jwt.AllowedAlgorithms{jwa.RS256},
+		AlgorithmVerifier:     jwt.AllowedAlgorithms{jwa.RS256},
 		AudienceVerifier:      jwt.UnsecureAnyAudience,
 		IssuerSubjectVerifier: jwt.Issuer(oidcIssuer),
 	}

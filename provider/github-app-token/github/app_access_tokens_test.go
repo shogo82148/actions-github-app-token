@@ -46,7 +46,7 @@ func TestCreateAppAccessToken(t *testing.T) {
 				}
 				return jwa.RS256.New().NewSigningKey(key), nil
 			}),
-			AlgorithmVerfier:      jwt.AllowedAlgorithms{jwa.RS256},
+			AlgorithmVerifier:     jwt.AllowedAlgorithms{jwa.RS256},
 			AudienceVerifier:      jwt.UnsecureAnyAudience,
 			IssuerSubjectVerifier: jwt.Issuer("123456"),
 		}
