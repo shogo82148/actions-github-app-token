@@ -53,8 +53,10 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/shogo82148/aws-xray-yasdk-go v1.7.4 h1:lImR7K/WbPoFqb6BGM/xnpGD2s4JnQ3WV7thWjDdjG0=
-github.com/shogo82148/aws-xray-yasdk-go v1.7.4/go.mod h1:Ou0BdxWM2H5u5FAcTqYUn08XSv+opM56jDULW8MLCRA=
+github.com/shogo82148/aws-xray-yasdk-go v1.8.0 h1:efBLrzo9t3JwwLGdOUgzhZxKSiqsz6XmVv4+xzV+vdI=
+github.com/shogo82148/aws-xray-yasdk-go v1.8.0/go.mod h1:84RrgJYiUbPssr17V+AHErBnaNBEoBKQ7RhbVAv70P0=
+github.com/shogo82148/forwarded-header v0.1.0 h1:OZX131i0B8GGZR+s5QEZdSEYDTUPkUX8ISIIQE+swKM=
+github.com/shogo82148/forwarded-header v0.1.0/go.mod h1:Ge73zEgn9jrdyf65vWTgDmRZQFQPHoFU0TaILJcvs54=
 github.com/shogo82148/go-http-logger v1.3.0 h1:4mTca6oyIXZrBXVrwzCdu3oWzI8r8aaBbM7sTsZituk=
 github.com/shogo82148/go-http-logger v1.3.0/go.mod h1:kT0vCPqUkYd9WVdLvZIQ0nIl/atEdfuyJCIpsBLOqz8=
 github.com/shogo82148/goat v0.1.0 h1:CD8v23E0rGSspMyKnS2FqiX+BJnEYs/mhgYDmo4i30k=
