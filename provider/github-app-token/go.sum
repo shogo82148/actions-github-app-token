@@ -65,8 +65,8 @@ github.com/shogo82148/memoize v0.0.4 h1:3n08PzuwGLbVwawf2jM5kfNC4mV25EqaAIjKrNfq
 github.com/shogo82148/memoize v0.0.4/go.mod h1:sOsvhOlJGVR2nHgCzUchvbEeYB6jNvSP9o4SPHgb+bY=
 github.com/shogo82148/pointer v1.3.0 h1:LW5V2jUAjFNjS8e7k/PgFoh3EavOSB/vvN85aGue5+I=
 github.com/shogo82148/pointer v1.3.0/go.mod h1:agZ5JFpavFPXznbWonIvbG78NDfvDTFppe+7o53up5w=
-github.com/shogo82148/ridgenative v1.4.0 h1:yBsshqKQ86Y155CzgW3iC34DPwpcClceCJ8JQBd36UE=
-github.com/shogo82148/ridgenative v1.4.0/go.mod h1:PInWLpQIV0RsZI3j81ZH87hQ2knhDiMGbeDuTli3QIE=
+github.com/shogo82148/ridgenative v1.5.0 h1:93zkFRr/JG1LNvqu2c3BsZhR2yv1hVaI/bFJZD2bVZo=
+github.com/shogo82148/ridgenative v1.5.0/go.mod h1:PInWLpQIV0RsZI3j81ZH87hQ2knhDiMGbeDuTli3QIE=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 golang.org/x/crypto v0.17.0 h1:r8bRNjWL3GshPW3gkd+RpvzWrZAwPS49OmTGZ/uhM4k=
 golang.org/x/crypto v0.17.0/go.mod h1:gCAAfMLgwOJRpTjQ2zCCt2OcSfYMTeZVSRtQlPC7Nq4=
