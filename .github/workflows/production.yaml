@@ -33,7 +33,7 @@ jobs:
           make build
         working-directory: provider
 
-      - uses: fuller-inc/actions-aws-assume-role@a9b5106401b015d01aa363d710727c7d07ae0fbe # v1.7.0
+      - uses: fuller-inc/actions-aws-assume-role@ab8b68ccaa6a83d843cd6f9403fc3c0eb2e3af0c # v1.7.1
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::978218332026:role/github-app-token-github-actions-us-east-1
