@@ -5,7 +5,7 @@ go 1.22.2
 require (
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.5
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.50.0
 	github.com/goccy/go-yaml v1.11.3
 	github.com/shogo82148/aws-xray-yasdk-go v1.8.0
 	github.com/shogo82148/go-http-logger v1.3.0
