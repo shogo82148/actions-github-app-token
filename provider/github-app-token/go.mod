@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.21
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.51.1
 	github.com/goccy/go-yaml v1.11.3
-	github.com/shogo82148/aws-xray-yasdk-go v1.8.0
+	github.com/shogo82148/aws-xray-yasdk-go v1.8.1
 	github.com/shogo82148/go-http-logger v1.3.0
 	github.com/shogo82148/goat v0.1.0
 	github.com/shogo82148/ridgenative v1.5.0
