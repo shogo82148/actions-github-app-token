@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Set up Go
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           cache: true
           go-version-file: provider/github-app-token/go.mod
@@ -31,7 +31,7 @@ jobs:
           make build
         working-directory: provider
 
-      - uses: fuller-inc/actions-aws-assume-role@a9b5106401b015d01aa363d710727c7d07ae0fbe # v1.7.0
+      - uses: fuller-inc/actions-aws-assume-role@ab8b68ccaa6a83d843cd6f9403fc3c0eb2e3af0c # v1.7.1
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::616212855146:role/github-app-token-github-actions-us-east-1
@@ -46,7 +46,7 @@ jobs:
           APP_ENV: staging
 
       - name: Set up Node.js
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with:
           node-version-file: action/package.json
           cache: "npm"
@@ -73,7 +73,7 @@ jobs:
             R_kgDOIevBqQ
 
       - name: Check out code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: "shogo82148/improved-lamp"
           path: improved-lamp
