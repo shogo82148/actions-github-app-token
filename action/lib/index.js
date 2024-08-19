@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assumeRole = void 0;
+exports.assumeRole = assumeRole;
 const core = __importStar(require("@actions/core"));
 const http = __importStar(require("@actions/http-client"));
 async function assumeRole(params) {
@@ -56,7 +56,6 @@ async function assumeRole(params) {
     core.setOutput("token", resp.github_token);
     core.saveState("token", resp.github_token);
 }
-exports.assumeRole = assumeRole;
 function isIdTokenAvailable() {
     const token = process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
     const url = process.env["ACTIONS_ID_TOKEN_REQUEST_URL"];
