@@ -1,6 +1,7 @@
 module github.com/shogo82148/actions-github-app-token/provider/github-app-token
 
 go 1.22.2
+toolchain go1.23.7
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.0
@@ -11,7 +12,7 @@ require (
 	github.com/shogo82148/go-http-logger v1.3.0
 	github.com/shogo82148/goat v0.1.0
 	github.com/shogo82148/ridgenative v1.5.0
-	golang.org/x/sync v0.10.0
+	golang.org/x/sync v0.12.0
 )
 
 require (
