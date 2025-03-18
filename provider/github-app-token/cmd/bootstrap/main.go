@@ -26,7 +26,7 @@ func init() {
 func main() {
 	h, err := githubapptoken.NewHandler()
 	if err != nil {
-		slog.Error("failed to initialize: %v", err)
+		slog.Error("failed to initialize", slog.Any("error", err))
 		os.Exit(1)
 	}
 	mux := http.NewServeMux()
@@ -36,7 +36,7 @@ func main() {
 
 	err = ridgenative.ListenAndServe(":8080", httplogger.LoggingHandler(logger, mux))
 	if err != nil {
-		slog.Error("failed to listen and serve: %v", err)
+		slog.Error("failed to listen and serve", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
