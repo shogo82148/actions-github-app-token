@@ -56,6 +56,12 @@ func TestGetApp(t *testing.T) {
 			rw.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		if token.Header.Type() != "JWT" {
+			t.Errorf("unexpected token type: want %q, got %q", "JWT", token.Header.Type())
+		}
+		if !token.Header.Base64() {
+			t.Errorf("unexpected token header: want %t, got %t", true, token.Header.Base64())
+		}
 		claims := token.Claims
 		iss := claims.Issuer
 		if iss != "123456" {
