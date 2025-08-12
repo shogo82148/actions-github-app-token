@@ -99,7 +99,8 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 // https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
 func (c *Client) generateJWT() (string, error) {
 	now := time.Now().Truncate(time.Second)
-	header := new(jws.Header)
+	header := jws.NewHeader()
+	header.SetType("JWT")
 	header.SetAlgorithm(jwa.RS256)
 	claims := &jwt.Claims{
 		NotBefore:      now.Add(-60 * time.Second),
