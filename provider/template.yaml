@@ -29,7 +29,7 @@ Resources:
     Properties:
       CodeUri: github-app-token/
       Handler: github-app-token
-      Runtime: provided.al2
+      Runtime: provided.al2023
       Architectures: [arm64]
       Tracing: Active
       Events:
