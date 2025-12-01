@@ -28,6 +28,6 @@ require (
 	github.com/aws/smithy-go v1.23.0 // indirect
 	github.com/shogo82148/forwarded-header v0.1.0 // indirect
 	github.com/shogo82148/memoize v0.0.4 // indirect
-	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 )
