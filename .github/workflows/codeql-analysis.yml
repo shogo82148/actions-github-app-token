@@ -44,7 +44,7 @@ jobs:
       # Initializes the Golang environment for the CodeQL tools.
       # https://github.com/github/codeql-action/issues/1842#issuecomment-1704398087
       - name: Install Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: provider/github-app-token/go.mod
           cache-dependency-path: provider/github-app-token/go.sum
