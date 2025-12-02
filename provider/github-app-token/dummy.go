@@ -30,7 +30,7 @@ func (c *githubClientDummy) GetReposInfo(ctx context.Context, token, nodeID stri
 func (c *githubClientDummy) GetReposContent(ctx context.Context, token, owner, repo, path string) (*github.GetReposContentResponse, error) {
 	content := `
 repositories:
-	- R_kgDOF8HFZg
+  - R_kgDOF8HFZg
 `
 	return &github.GetReposContentResponse{
 		Type:     "file",

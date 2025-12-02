@@ -15,7 +15,7 @@ outputs:
   token:
     description: An installation token for the GitHub App on the requested repository.
 runs:
-  using: "node20"
+  using: "node24"
   main: "action/lib/index.js"
   post: "action/lib/cleanup.js"
   post-if: always()

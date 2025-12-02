@@ -60,7 +60,7 @@ jobs:
 
 ## How It Works
 
-![How to Work](how-to-work.svg)
+![How It Works](how-it-works.svg)
 
 1. Request a new credential with OIDC (OpenID Connect) Token.\
    The `shogo82148/actions-github-app-token` action sends a temporary id token to the credential token vendor.
