@@ -20,8 +20,7 @@ func TestParseIDToken_Integrated(t *testing.T) {
 		t.Skip("it is not in GitHub Actions Environment")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	t.Run("the default audience", func(t *testing.T) {
 		t.Logf("the request started at %s", time.Now())
