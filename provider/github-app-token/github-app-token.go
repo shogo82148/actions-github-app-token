@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -233,12 +234,7 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 
 // contains returns true if the slice contains s.
 func contains(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, s)
 }
 
 // validateToken validates the token and returns the token's payload.
@@ -351,10 +347,8 @@ func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResp
 		return 0, err
 	}
 
-	for _, nodeID := range config.Repositories {
-		if nodeID == from {
-			return info.ID, nil
-		}
+	if slices.Contains(config.Repositories, from) {
+		return info.ID, nil
 	}
 	return 0, errors.New("permission denied")
 }
