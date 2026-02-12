@@ -232,11 +232,6 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	}, nil
 }
 
-// contains returns true if the slice contains s.
-func contains(slice []string, s string) bool {
-	return slices.Contains(slice, s)
-}
-
 // validateToken validates the token and returns the token's payload.
 func (h *Handler) validateToken(ctx context.Context, token string) (*github.ActionsIDToken, error) {
 	id, err := h.github.ParseIDToken(ctx, token)
@@ -245,7 +240,7 @@ func (h *Handler) validateToken(ctx context.Context, token string) (*github.Acti
 			message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
 		}
 	}
-	if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
+	if !slices.Contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
 		return nil, &validationError{
 			message: fmt.Sprintf("invalid audience: %v", id.Audience),
 		}
