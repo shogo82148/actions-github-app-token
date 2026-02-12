@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -231,16 +232,6 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 	}, nil
 }
 
-// contains returns true if the slice contains s.
-func contains(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
-
 // validateToken validates the token and returns the token's payload.
 func (h *Handler) validateToken(ctx context.Context, token string) (*github.ActionsIDToken, error) {
 	id, err := h.github.ParseIDToken(ctx, token)
@@ -249,7 +240,7 @@ func (h *Handler) validateToken(ctx context.Context, token string) (*github.Acti
 			message: fmt.Sprintf("invalid JSON Web Token: %s", err.Error()),
 		}
 	}
-	if !contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
+	if !slices.Contains(id.Audience, fmt.Sprintf("%s%d", audiencePrefix, h.appID)) {
 		return nil, &validationError{
 			message: fmt.Sprintf("invalid audience: %v", id.Audience),
 		}
@@ -351,10 +342,8 @@ func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResp
 		return 0, err
 	}
 
-	for _, nodeID := range config.Repositories {
-		if nodeID == from {
-			return info.ID, nil
-		}
+	if slices.Contains(config.Repositories, from) {
+		return info.ID, nil
 	}
 	return 0, errors.New("permission denied")
 }
