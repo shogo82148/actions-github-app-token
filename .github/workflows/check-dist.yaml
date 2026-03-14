@@ -31,6 +31,7 @@ jobs:
         with:
           node-version-file: ".node-version"
           cache: "npm"
+          cache-dependency-path: action/package-lock.json
 
       - name: Install dependencies
         working-directory: action
