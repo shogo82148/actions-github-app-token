@@ -7,7 +7,7 @@
   "scripts": {
     "build": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "format": "prettier --write **/*.ts",
-    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 jest"
+    "test": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js"
   },
   "engines": {
     "node": ">=24.0.0"
