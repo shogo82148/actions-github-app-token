@@ -16,8 +16,8 @@ outputs:
     description: An installation token for the GitHub App on the requested repository.
 runs:
   using: "node24"
-  main: "action/lib/index.js"
-  post: "action/lib/cleanup.js"
+  main: "action/dist/index.js"
+  post: "action/dist/cleanup.js"
   post-if: always()
 branding:
   icon: "unlock"
