@@ -2,17 +2,22 @@ import * as os from "os";
 import { promises as fs } from "fs";
 import * as path from "path";
 import * as child_process from "child_process";
-import * as core from "@actions/core";
 import * as io from "@actions/io";
 import * as exec from "@actions/exec";
-import * as index from "../src/index";
+import { jest } from "@jest/globals";
+import * as core from "../__fixtures__/core.js";
 
 const sep = path.sep;
 
 // extension of executable files
 const binExt = os.platform() === "win32" ? ".exe" : "";
 
-jest.mock("@actions/core");
+// Mocks should be declared before the module being tested is imported.
+jest.unstable_mockModule("@actions/core", () => core);
+
+// The module being tested should be imported dynamically. This ensures that the
+// mocks are used in place of any actual dependencies.
+const { assumeRole } = await import("../src/index.js");
 
 describe("tests", () => {
   let tmpdir = "";
@@ -29,7 +34,7 @@ describe("tests", () => {
       ["build", "-o", bin, "github.com/shogo82148/actions-github-app-token/provider/github-app-token/cmd/dummy"],
       {
         cwd: `..${sep}provider${sep}github-app-token`,
-      }
+      },
     );
 
     console.log("starting dummy server");
@@ -53,7 +58,7 @@ describe("tests", () => {
   });
 
   it("succeed", async () => {
-    await index.assumeRole({
+    await assumeRole({
       providerEndpoint: "http://localhost:8080",
       audience: "https://github-app.shogo82148.com/1234567890",
       repositories: ["R_123456"],

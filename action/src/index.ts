@@ -33,7 +33,7 @@ export async function assumeRole(params: GetTokenParams) {
 
   if (!isIdTokenAvailable()) {
     core.error(
-      `OIDC provider is not available. please enable it. see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect`
+      `OIDC provider is not available. please enable it. see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect`,
     );
   }
   const token = await core.getIDToken(params.audience);
@@ -98,6 +98,5 @@ async function run() {
   }
 }
 
-if (require.main === module) {
-  run();
-}
+/* istanbul ignore next */
+run();

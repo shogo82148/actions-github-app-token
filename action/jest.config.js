@@ -1,11 +1,23 @@
-module.exports = {
+// See: https://jestjs.io/docs/configuration
+
+/** @type {import('ts-jest').JestConfigWithTsJest} **/
+export default {
   clearMocks: true,
-  moduleFileExtensions: ['js', 'ts'],
-  testEnvironment: 'node',
-  testMatch: ['**/*.test.ts'],
-  testRunner: 'jest-circus/runner',
+  extensionsToTreatAsEsm: [".ts"],
+  moduleFileExtensions: ["ts", "js"],
+  preset: "ts-jest",
+  reporters: ["default"],
+  resolver: "ts-jest-resolver",
+  testEnvironment: "node",
+  testMatch: ["**/*.test.ts"],
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        tsconfig: "tsconfig.test.json",
+        useESM: true,
+      },
+    ],
   },
-  verbose: true
-}
+  verbose: true,
+};
