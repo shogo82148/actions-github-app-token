@@ -34,7 +34,7 @@ describe("tests", () => {
       ["build", "-o", bin, "github.com/shogo82148/actions-github-app-token/provider/github-app-token/cmd/dummy"],
       {
         cwd: `..${sep}provider${sep}github-app-token`,
-      }
+      },
     );
 
     console.log("starting dummy server");

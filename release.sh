@@ -29,14 +29,6 @@ mv .tmp.json package.json
 jq ".version=\"$MAJOR.$MINOR.$PATCH\"" < package-lock.json > .tmp.json
 mv .tmp.json package-lock.json
 
-: build the action
-npm ci
-npm run build
-
-: remove development packages from node_modules
-npm prune --production
-perl -ne 'print unless m(^/node_modules/|/lib/$)' -i .gitignore
-
 : publish to GitHub
 git add .
 git commit -m "bump up to v$MAJOR.$MINOR.$PATCH" || true

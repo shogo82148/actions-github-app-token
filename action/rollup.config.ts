@@ -9,7 +9,7 @@ const config = [
     input: "src/index.ts",
     output: {
       esModule: true,
-      file: "lib/index.js",
+      file: "dist/index.js",
       format: "es",
       sourcemap: true,
     },
@@ -19,7 +19,7 @@ const config = [
     input: "src/cleanup.ts",
     output: {
       esModule: true,
-      file: "lib/cleanup.js",
+      file: "dist/cleanup.js",
       format: "es",
       sourcemap: true,
     },
