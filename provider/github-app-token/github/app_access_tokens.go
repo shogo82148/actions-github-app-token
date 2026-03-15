@@ -59,6 +59,7 @@ func (c *Client) CreateAppAccessToken(ctx context.Context, installationID uint64
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", githubUserAgent)
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-GitHub-Api-Version", githubAPIVersion)
 	req.Header.Set("X-Github-Next-Global-ID", "1")
 
 	// send the request
