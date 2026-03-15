@@ -14,6 +14,7 @@ async function cleanup() {
     const resp = await client.del(`${apiUrl}/installation/token`, {
       Authorization: `token ${token}`,
       Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2026-03-10",
     });
     const statusCode = resp.message.statusCode;
     if (statusCode === 204) {
