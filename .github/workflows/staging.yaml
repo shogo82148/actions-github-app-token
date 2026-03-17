@@ -31,7 +31,7 @@ jobs:
           make build
         working-directory: provider
 
-      - uses: aws-actions/configure-aws-credentials@v6
+      - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::616212855146:role/github-app-token-github-actions-us-east-1
