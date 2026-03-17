@@ -31,12 +31,10 @@ jobs:
           make build
         working-directory: provider
 
-      - uses: fuller-inc/actions-aws-assume-role@1ccac830f7c1c1798a7b3bea3087dcc10ac7ea1b # v1.8.1
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::616212855146:role/github-app-token-github-actions-us-east-1
-          role-session-tagging: true
-          use-node-id: true
 
       - name: deploy
         run: |
