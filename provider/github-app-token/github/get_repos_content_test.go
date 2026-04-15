@@ -12,11 +12,6 @@ import (
 )
 
 func TestGetReposContent(t *testing.T) {
-	privateKey, err := os.ReadFile("./testdata/id_rsa_for_testing")
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			t.Errorf("unexpected method: want GET, got %s", r.Method)
@@ -45,7 +40,11 @@ func TestGetReposContent(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	c, err := NewClient(nil, 123456, privateKey)
+	kmssvc, err := newMockKMSService()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := NewClient(nil, 123456, kmssvc, "alias/dummy")
 	if err != nil {
 		t.Fatal(err)
 	}

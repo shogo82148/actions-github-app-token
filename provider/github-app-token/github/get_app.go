@@ -15,7 +15,7 @@ type GetAppResponse struct {
 // GetApp returns the GitHub App associated with the authentication credentials used.
 // https://docs.github.com/en/rest/reference/apps#get-the-authenticated-app
 func (c *Client) GetApp(ctx context.Context) (*GetAppResponse, error) {
-	token, err := c.generateJWT()
+	token, err := c.generateJWT(ctx)
 	if err != nil {
 		return nil, err
 	}

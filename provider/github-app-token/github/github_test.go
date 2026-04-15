@@ -1,11 +1,48 @@
 package github
 
 import (
+	"context"
 	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/shogo82148/goat/jwa"
 	"github.com/shogo82148/goat/jwk"
 )
+
+var _ KMSService = (*mockKMSService)(nil)
+
+// mockKMSService is a mock implementation of KMSService for testing.
+type mockKMSService struct {
+	signFunc func(ctx context.Context, input *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error)
+}
+
+func (m *mockKMSService) Sign(ctx context.Context, input *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
+	return m.signFunc(ctx, input, optFns...)
+}
+
+func newMockKMSService() (*mockKMSService, error) {
+	privateKey, err := os.ReadFile("./testdata/id_rsa_for_testing.pem")
+	if err != nil {
+		return nil, err
+	}
+	key, _, err := jwk.DecodePEM(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	signer := jwa.RS256.New().NewSigningKey(key)
+	return &mockKMSService{
+		signFunc: func(ctx context.Context, input *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
+			sig, err := signer.Sign(input.Message)
+			if err != nil {
+				return nil, err
+			}
+			return &kms.SignOutput{
+				Signature: sig,
+			}, nil
+		},
+	}, nil
+}
 
 func TestCanonicalURL(t *testing.T) {
 	cases := []struct {
