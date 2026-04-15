@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
 
 KMS_KEY_ID=$1
 IMPORT_KEY=$2
