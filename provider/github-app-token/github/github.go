@@ -105,6 +105,13 @@ func NewClient(httpClient Doer, appID uint64, kmssvc KMSService, keyID string) (
 // generate JSON Web Token for authentication the app
 // https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
 func (c *Client) generateJWT(ctx context.Context) (string, error) {
+	if c.kmssvc == nil {
+		return "", errors.New("github app KMS service is not configured")
+	}
+	if c.keyID == "" {
+		return "", errors.New("github app KMS key ID is not configured")
+	}
+
 	now := time.Now().Truncate(time.Second)
 	header := jws.NewHeader()
 	header.SetType("JWT")
