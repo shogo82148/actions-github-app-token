@@ -11,10 +11,10 @@ Parameters:
     Type: AWS::SSM::Parameter::Name
     Default: /github-app-token/app-id
     Description: A Systems Manager parameter whose value is the app id.
-  PrivateKey:
-    Type: AWS::SSM::Parameter::Name
-    Default: /github-app-token/private-key
-    Description: A Systems Manager parameter whose value is the private key.
+  KmsKeyId:
+    Type: String
+    Default: alias/github-app
+    Description: The KMS key ID used for signing JWTs. It must be an alias of a asymmetric KMS Key.
 
 Globals:
   Function:
@@ -39,10 +39,19 @@ Resources:
         Variables:
           GITHUB_API_URL: !Ref ApiUrl
           GITHUB_APP_ID: !Ref AppId
-          GITHUB_PRIVATE_KEY: !Ref PrivateKey
+          GITHUB_APP_KMS_KEY_ID: !Ref KmsKeyId
       Policies:
         - SSMParameterWithSlashPrefixReadPolicy:
             ParameterName: !Ref AppId
-        - SSMParameterWithSlashPrefixReadPolicy:
-            ParameterName: !Ref PrivateKey
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - kms:Sign
+              Resource: !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+              Condition:
+                StringEquals:
+                  kms:SigningAlgorithm: "RSASSA_PKCS1_V1_5_SHA_256"
+                ForAnyValue:StringEquals:
+                  kms:ResourceAliases: !Ref KmsKeyId

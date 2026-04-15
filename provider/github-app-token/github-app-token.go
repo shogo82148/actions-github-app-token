@@ -15,6 +15,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/goccy/go-yaml"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
@@ -72,17 +73,11 @@ func NewHandler() (*Handler, error) {
 		return nil, err
 	}
 
-	privateKeyParam, err := svc.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(os.Getenv("GITHUB_PRIVATE_KEY")),
-		WithDecryption: aws.Bool(true),
-	})
-	if err != nil {
-		return nil, err
-	}
-	privateKey := []byte(aws.ToString(privateKeyParam.Parameter.Value))
+	kmsID := os.Getenv("GITHUB_APP_KMS_KEY_ID")
+	kmssvc := kms.NewFromConfig(cfg)
 
 	client := xrayhttp.Client(http.DefaultClient)
-	c, err := github.NewClient(client, appID, privateKey)
+	c, err := github.NewClient(client, appID, kmssvc, kmsID)
 	if err != nil {
 		return nil, err
 	}

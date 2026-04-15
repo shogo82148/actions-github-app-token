@@ -16,7 +16,7 @@ type GetReposInstallationResponse struct {
 // GetReposInstallation gets a repository installation for the authenticated app
 // https://docs.github.com/en/rest/reference/apps#get-a-repository-installation-for-the-authenticated-app
 func (c *Client) GetReposInstallation(ctx context.Context, owner, repo string) (*GetReposInstallationResponse, error) {
-	token, err := c.generateJWT()
+	token, err := c.generateJWT(ctx)
 	if err != nil {
 		return nil, err
 	}

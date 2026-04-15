@@ -1,6 +1,7 @@
 package github
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,12 +13,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/shogo82148/goat/jwa"
 	_ "github.com/shogo82148/goat/jwa/rs" // for RS256
-	"github.com/shogo82148/goat/jwk"
 	"github.com/shogo82148/goat/jws"
 	"github.com/shogo82148/goat/jwt"
 	"github.com/shogo82148/goat/oidc"
+	"github.com/shogo82148/goat/sig"
 )
 
 const (
@@ -61,14 +64,20 @@ type Client struct {
 	httpClient Doer
 
 	// configure for GitHub App
-	appID      uint64
-	privateKey *jwk.Key
+	appID  uint64
+	kmssvc KMSService
+	keyID  string
 
 	// configure for OpenID Connect
 	oidcClient *oidc.Client
 }
 
-func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error) {
+// KMSService is a subset of AWS KMS client interface used for signing JWTs.
+type KMSService interface {
+	Sign(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error)
+}
+
+func NewClient(httpClient Doer, appID uint64, kmssvc KMSService, keyID string) (*Client, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -85,15 +94,9 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 		baseURL:    apiBaseURL,
 		httpClient: httpClient,
 		appID:      appID,
+		kmssvc:     kmssvc,
+		keyID:      keyID,
 		oidcClient: oidcClient,
-	}
-
-	if privateKey != nil {
-		key, _, err := jwk.DecodePEM(privateKey)
-		if err != nil {
-			return nil, err
-		}
-		c.privateKey = key
 	}
 
 	return c, nil
@@ -101,7 +104,14 @@ func NewClient(httpClient Doer, appID uint64, privateKey []byte) (*Client, error
 
 // generate JSON Web Token for authentication the app
 // https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
-func (c *Client) generateJWT() (string, error) {
+func (c *Client) generateJWT(ctx context.Context) (string, error) {
+	if c.kmssvc == nil {
+		return "", errors.New("github app KMS service is not configured")
+	}
+	if c.keyID == "" {
+		return "", errors.New("github app KMS key ID is not configured")
+	}
+
 	now := time.Now().Truncate(time.Second)
 	header := jws.NewHeader()
 	header.SetType("JWT")
@@ -112,14 +122,43 @@ func (c *Client) generateJWT() (string, error) {
 		ExpirationTime: now.Add(5 * time.Minute),
 		Issuer:         strconv.FormatUint(c.appID, 10),
 	}
-	key := jwa.RS256.New().NewSigningKey(c.privateKey)
-	token, err := jwt.Sign(header, claims, key)
+	token, err := jwt.Sign(header, claims, &key{
+		ctx:   ctx,
+		svc:   c.kmssvc,
+		keyID: c.keyID,
+	})
 	if err != nil {
 		return "", err
 	}
 	return string(token), nil
 }
 
+var _ sig.SigningKey = (*key)(nil)
+
+type key struct {
+	ctx   context.Context
+	svc   KMSService
+	keyID string
+}
+
+func (k *key) Sign(data []byte) ([]byte, error) {
+	out, err := k.svc.Sign(k.ctx, &kms.SignInput{
+		Message:          data,
+		KeyId:            &k.keyID,
+		MessageType:      kmstypes.MessageTypeRaw,
+		SigningAlgorithm: kmstypes.SigningAlgorithmSpecRsassaPkcs1V15Sha256,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out.Signature, nil
+}
+
+func (k *key) Verify(data, sig []byte) error {
+	return errors.New("not implemented")
+}
+
+// ValidateAPIURL validates the API URL of the client. It returns an error if the URL is not valid.
 func (c *Client) ValidateAPIURL(url string) error {
 	u, err := canonicalURL(url)
 	if err != nil {
