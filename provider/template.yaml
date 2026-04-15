@@ -14,7 +14,7 @@ Parameters:
   KmsKeyId:
     Type: String
     Default: alias/github-app
-    Description: The KMS key ID used for signing JWTs.
+    Description: The KMS key ID used for signing JWTs. It must be an alias of a asymmetric KMS Key.
 
 Globals:
   Function:
@@ -53,3 +53,5 @@ Resources:
               Condition:
                 StringEquals:
                   kms:SigningAlgorithm: "RSASSA_PKCS1_V1_5_SHA_256"
+                ForAnyValue:StringEquals:
+                  kms:ResourceAliases: !Ref KmsKeyId
