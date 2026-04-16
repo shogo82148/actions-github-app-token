@@ -15,6 +15,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/goccy/go-yaml"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
@@ -72,17 +73,11 @@ func NewHandler() (*Handler, error) {
 		return nil, err
 	}
 
-	privateKeyParam, err := svc.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(os.Getenv("GITHUB_PRIVATE_KEY")),
-		WithDecryption: aws.Bool(true),
-	})
-	if err != nil {
-		return nil, err
-	}
-	privateKey := []byte(aws.ToString(privateKeyParam.Parameter.Value))
+	kmsID := os.Getenv("GITHUB_APP_KMS_KEY_ID")
+	kmssvc := kms.NewFromConfig(cfg)
 
 	client := xrayhttp.Client(http.DefaultClient)
-	c, err := github.NewClient(client, appID, privateKey)
+	c, err := github.NewClient(client, appID, kmssvc, kmsID)
 	if err != nil {
 		return nil, err
 	}
@@ -99,9 +94,69 @@ func NewHandler() (*Handler, error) {
 	}, nil
 }
 
+// requestBody is the request body for the token request.
 type requestBody struct {
-	Repositories []string `json:"repositories"`
-	APIURL       string   `json:"api_url"`
+	APIURL       string       `json:"api_url"`
+	Repositories []string     `json:"repositories"`
+	Permissions  *permissions `json:"permissions,omitempty"`
+}
+
+// permissions is the permissions for the token request.
+type permissions struct {
+	Actions                                    string `json:"actions,omitempty"`
+	Administration                             string `json:"administration,omitempty"`
+	ArtifactMetadata                           string `json:"artifact_metadata,omitempty"`
+	Attestations                               string `json:"attestations,omitempty"`
+	Checks                                     string `json:"checks,omitempty"`
+	Codespaces                                 string `json:"codespaces,omitempty"`
+	Contents                                   string `json:"contents,omitempty"`
+	CustomPropertiesForOrganizations           string `json:"custom_properties_for_organizations,omitempty"`
+	DependabotSecrets                          string `json:"dependabot_secrets,omitempty"`
+	Deployments                                string `json:"deployments,omitempty"`
+	Discussions                                string `json:"discussions,omitempty"`
+	EmailAddresses                             string `json:"email_addresses,omitempty"`
+	EnterpriseCustomPropertiesForOrganizations string `json:"enterprise_custom_properties_for_organizations,omitempty"`
+	Environments                               string `json:"environments,omitempty"`
+	Followers                                  string `json:"followers,omitempty"`
+	GitSSHKeys                                 string `json:"git_ssh_keys,omitempty"`
+	GPGKeys                                    string `json:"gpg_keys,omitempty"`
+	InteractionLimits                          string `json:"interaction_limits,omitempty"`
+	Issues                                     string `json:"issues,omitempty"`
+	Members                                    string `json:"members,omitempty"`
+	MergeQueues                                string `json:"merge_queues,omitempty"`
+	Metadata                                   string `json:"metadata,omitempty"`
+	OrganizationAdministration                 string `json:"organization_administration,omitempty"`
+	OrganizationAnnouncementBanners            string `json:"organization_announcement_banners,omitempty"`
+	OrganizationCopilotSeatManagement          string `json:"organization_copilot_seat_management,omitempty"`
+	OrganizationCustomOrgRoles                 string `json:"organization_custom_org_roles,omitempty"`
+	OrganizationCustomProperties               string `json:"organization_custom_properties,omitempty"`
+	OrganizationCustomRoles                    string `json:"organization_custom_roles,omitempty"`
+	OrganizationEvents                         string `json:"organization_events,omitempty"`
+	OrganizationHooks                          string `json:"organization_hooks,omitempty"`
+	OrganizationPackages                       string `json:"organization_packages,omitempty"`
+	OrganizationPersonalAccessTokenRequests    string `json:"organization_personal_access_token_requests,omitempty"`
+	OrganizationPersonalAccessTokens           string `json:"organization_personal_access_tokens,omitempty"`
+	OrganizationPlan                           string `json:"organization_plan,omitempty"`
+	OrganizationProjects                       string `json:"organization_projects,omitempty"`
+	OrganizationSecrets                        string `json:"organization_secrets,omitempty"`
+	OrganizationSelfHostedRunners              string `json:"organization_self_hosted_runners,omitempty"`
+	OrganizationUserBlocking                   string `json:"organization_user_blocking,omitempty"`
+	Packages                                   string `json:"packages,omitempty"`
+	Pages                                      string `json:"pages,omitempty"`
+	Profile                                    string `json:"profile,omitempty"`
+	PullRequests                               string `json:"pull_requests,omitempty"`
+	RepositoryCustomProperties                 string `json:"repository_custom_properties,omitempty"`
+	RepositoryHooks                            string `json:"repository_hooks,omitempty"`
+	RepositoryProjects                         string `json:"repository_projects,omitempty"`
+	SecretScanningAlerts                       string `json:"secret_scanning_alerts,omitempty"`
+	Secrets                                    string `json:"secrets,omitempty"`
+	SecurityEvents                             string `json:"security_events,omitempty"`
+	SingleFile                                 string `json:"single_file,omitempty"`
+	Starring                                   string `json:"starring,omitempty"`
+	Statuses                                   string `json:"statuses,omitempty"`
+	TeamDiscussions                            string `json:"team_discussions,omitempty"`
+	VulnerabilityAlerts                        string `json:"vulnerability_alerts,omitempty"`
+	Workflows                                  string `json:"workflows,omitempty"`
 }
 
 type responseBody struct {
@@ -220,8 +275,69 @@ func (h *Handler) handle(ctx context.Context, token string, req *requestBody) (*
 		return nil, err
 	}
 
+	var permissions *github.CreateAppAccessTokenRequestPermissions
+	if p := req.Permissions; p != nil {
+		permissions = &github.CreateAppAccessTokenRequestPermissions{
+			Actions:                          p.Actions,
+			Administration:                   p.Administration,
+			ArtifactMetadata:                 p.ArtifactMetadata,
+			Attestations:                     p.Attestations,
+			Checks:                           p.Checks,
+			Codespaces:                       p.Codespaces,
+			Contents:                         p.Contents,
+			CustomPropertiesForOrganizations: p.CustomPropertiesForOrganizations,
+			DependabotSecrets:                p.DependabotSecrets,
+			Deployments:                      p.Deployments,
+			Discussions:                      p.Discussions,
+			EmailAddresses:                   p.EmailAddresses,
+			EnterpriseCustomPropertiesForOrganizations: p.EnterpriseCustomPropertiesForOrganizations,
+			Environments:                            p.Environments,
+			Followers:                               p.Followers,
+			GitSSHKeys:                              p.GitSSHKeys,
+			GPGKeys:                                 p.GPGKeys,
+			InteractionLimits:                       p.InteractionLimits,
+			Issues:                                  p.Issues,
+			Members:                                 p.Members,
+			MergeQueues:                             p.MergeQueues,
+			Metadata:                                p.Metadata,
+			OrganizationAdministration:              p.OrganizationAdministration,
+			OrganizationAnnouncementBanners:         p.OrganizationAnnouncementBanners,
+			OrganizationCopilotSeatManagement:       p.OrganizationCopilotSeatManagement,
+			OrganizationCustomOrgRoles:              p.OrganizationCustomOrgRoles,
+			OrganizationCustomProperties:            p.OrganizationCustomProperties,
+			OrganizationCustomRoles:                 p.OrganizationCustomRoles,
+			OrganizationEvents:                      p.OrganizationEvents,
+			OrganizationHooks:                       p.OrganizationHooks,
+			OrganizationPackages:                    p.OrganizationPackages,
+			OrganizationPersonalAccessTokenRequests: p.OrganizationPersonalAccessTokenRequests,
+			OrganizationPersonalAccessTokens:        p.OrganizationPersonalAccessTokens,
+			OrganizationPlan:                        p.OrganizationPlan,
+			OrganizationProjects:                    p.OrganizationProjects,
+			OrganizationSecrets:                     p.OrganizationSecrets,
+			OrganizationSelfHostedRunners:           p.OrganizationSelfHostedRunners,
+			OrganizationUserBlocking:                p.OrganizationUserBlocking,
+			Packages:                                p.Packages,
+			Pages:                                   p.Pages,
+			Profile:                                 p.Profile,
+			PullRequests:                            p.PullRequests,
+			RepositoryCustomProperties:              p.RepositoryCustomProperties,
+			RepositoryHooks:                         p.RepositoryHooks,
+			RepositoryProjects:                      p.RepositoryProjects,
+			SecretScanningAlerts:                    p.SecretScanningAlerts,
+			Secrets:                                 p.Secrets,
+			SecurityEvents:                          p.SecurityEvents,
+			SingleFile:                              p.SingleFile,
+			Starring:                                p.Starring,
+			Statuses:                                p.Statuses,
+			TeamDiscussions:                         p.TeamDiscussions,
+			VulnerabilityAlerts:                     p.VulnerabilityAlerts,
+			Workflows:                               p.Workflows,
+		}
+	}
+
 	resp, err := h.github.CreateAppAccessToken(ctx, inst.ID, &github.CreateAppAccessTokenRequest{
 		RepositoryIDs: repoIDs,
+		Permissions:   permissions,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed create access token: %w", err)

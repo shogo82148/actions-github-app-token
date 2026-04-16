@@ -22,18 +22,7 @@ The action provides [the GitHub Token Vending API](./provider) to manage token p
 
 ### Install the GitHub App
 
-Create a new your own GitHub App, or install [My Demonstration App](https://github.com/apps/shogo82148-slim).
-
-### Deploy the GitHub Token Vending API
-
-[Install the AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html),
-and deploy the API to your AWS Account.
-
-```
-cd provider/
-sam build
-sam deploy
-```
+Install [My Demonstration App](https://github.com/apps/shogo82148-slim).
 
 ### Use the Action in Your Workflow
 
@@ -49,9 +38,6 @@ jobs:
     steps:
       - id: generate
         uses: shogo82148/actions-github-app-token@v1
-        # Optional (defaults to My Demonstration App).
-        # with:
-        #   provider-endpoint: https://EXAMPLE.execute-api.us-east-1.amazonaws.com/
       - run: |
           gh issue create --title "Do something using GITHUB_TOKEN"
         env:
@@ -68,6 +54,11 @@ jobs:
    The long term credential doesn't leave AWS environment. It keeps the workflow safer.
 3. The vendor a new credential with JWT (JSON Web Token).
 4. GitHub returns a temporary credential.
+
+## Create your own GitHub Token Vending API
+
+If you own an AWS account, you can create the GitHub Token Vending API yourself.
+See [provider/README.md](./provider/README.md) for more detail.
 
 ## Related Works
 

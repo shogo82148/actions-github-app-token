@@ -16,7 +16,7 @@ type GetReposInstallationResponse struct {
 // GetReposInstallation gets a repository installation for the authenticated app
 // https://docs.github.com/en/rest/reference/apps#get-a-repository-installation-for-the-authenticated-app
 func (c *Client) GetReposInstallation(ctx context.Context, owner, repo string) (*GetReposInstallationResponse, error) {
-	token, err := c.generateJWT()
+	token, err := c.generateJWT(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,6 +30,7 @@ func (c *Client) GetReposInstallation(ctx context.Context, owner, repo string) (
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", githubUserAgent)
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-GitHub-Api-Version", githubAPIVersion)
 	req.Header.Set("X-Github-Next-Global-ID", "1")
 
 	// send the request
