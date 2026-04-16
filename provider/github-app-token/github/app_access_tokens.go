@@ -32,6 +32,7 @@ type CreateAppAccessTokenRequestPermissions struct {
 	Environments                               string `json:"environments,omitempty"`
 	Followers                                  string `json:"followers,omitempty"`
 	GitSSHKeys                                 string `json:"git_ssh_keys,omitempty"`
+	GPGKeys                                    string `json:"gpg_keys,omitempty"`
 	InteractionLimits                          string `json:"interaction_limits,omitempty"`
 	Issues                                     string `json:"issues,omitempty"`
 	Members                                    string `json:"members,omitempty"`
