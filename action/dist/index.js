@@ -28997,51 +28997,56 @@ function parseRepositories(s) {
     }
     return s.split(/\s+/);
 }
-// getReadOnlyPermission returns "read" if the input is "read", otherwise returns undefined and logs an error if the input is not empty or "read".
-function getReadOnlyPermission(name) {
-    const value = getInput(`permission-${name}`);
-    if (value === "read") {
-        return value;
-    }
-    else if (value) {
-        error(`invalid permission value for ${name}: ${value}`);
-    }
-    return undefined;
-}
-// getWriteOnlyPermission returns "write" if the input is "write", otherwise returns undefined and logs an error if the input is not empty or "write".
-function getWriteOnlyPermission(name) {
-    const value = getInput(`permission-${name}`);
-    if (value === "write") {
-        return value;
-    }
-    else if (value) {
-        error(`invalid permission value for ${name}: ${value}`);
-    }
-    return undefined;
-}
-// getReadWritePermission returns "read" or "write" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
-function getReadWritePermission(name) {
-    const value = getInput(`permission-${name}`);
-    if (value === "read" || value === "write") {
-        return value;
-    }
-    else if (value) {
-        error(`invalid permission value for ${name}: ${value}`);
-    }
-    return undefined;
-}
-// getReadWriteAdminPermission returns "read", "write" or "admin" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
-function getReadWriteAdminPermission(name) {
-    const value = getInput(`permission-${name}`);
-    if (value === "read" || value === "write" || value === "admin") {
-        return value;
-    }
-    else if (value) {
-        error(`invalid permission value for ${name}: ${value}`);
-    }
-    return undefined;
-}
 async function run() {
+    let errorCount = 0;
+    // getReadOnlyPermission returns "read" if the input is "read", otherwise returns undefined and logs an error if the input is not empty or "read".
+    const getReadOnlyPermission = (name) => {
+        const value = getInput(`permission-${name}`);
+        if (value === "read") {
+            return value;
+        }
+        else if (value) {
+            error(`invalid permission value for ${name}: ${value}`);
+            errorCount++;
+        }
+        return undefined;
+    };
+    // getWriteOnlyPermission returns "write" if the input is "write", otherwise returns undefined and logs an error if the input is not empty or "write".
+    const getWriteOnlyPermission = (name) => {
+        const value = getInput(`permission-${name}`);
+        if (value === "write") {
+            return value;
+        }
+        else if (value) {
+            error(`invalid permission value for ${name}: ${value}`);
+            errorCount++;
+        }
+        return undefined;
+    };
+    // getReadWritePermission returns "read" or "write" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
+    const getReadWritePermission = (name) => {
+        const value = getInput(`permission-${name}`);
+        if (value === "read" || value === "write") {
+            return value;
+        }
+        else if (value) {
+            error(`invalid permission value for ${name}: ${value}`);
+            errorCount++;
+        }
+        return undefined;
+    };
+    // getReadWriteAdminPermission returns "read", "write" or "admin" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
+    const getReadWriteAdminPermission = (name) => {
+        const value = getInput(`permission-${name}`);
+        if (value === "read" || value === "write" || value === "admin") {
+            return value;
+        }
+        else if (value) {
+            error(`invalid permission value for ${name}: ${value}`);
+            errorCount++;
+        }
+        return undefined;
+    };
     const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
     const defaultAppID = "136245";
     const audiencePrefix = "https://github-app.shogo82148.com/";
@@ -29106,6 +29111,10 @@ async function run() {
             vulnerability_alerts: getReadWritePermission("vulnerability-alerts"),
             workflows: getWriteOnlyPermission("workflows"),
         };
+        if (errorCount > 0) {
+            setFailed(`invalid permissions: ${errorCount} error(s) found`);
+            return;
+        }
         await assumeRole({
             providerEndpoint,
             audience,

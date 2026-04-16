@@ -134,51 +134,57 @@ function parseRepositories(s: string): string[] {
   return s.split(/\s+/);
 }
 
-// getReadOnlyPermission returns "read" if the input is "read", otherwise returns undefined and logs an error if the input is not empty or "read".
-function getReadOnlyPermission(name: string): "read" | undefined {
-  const value = core.getInput(`permission-${name}`);
-  if (value === "read") {
-    return value;
-  } else if (value) {
-    core.error(`invalid permission value for ${name}: ${value}`);
-  }
-  return undefined;
-}
-
-// getWriteOnlyPermission returns "write" if the input is "write", otherwise returns undefined and logs an error if the input is not empty or "write".
-function getWriteOnlyPermission(name: string): "write" | undefined {
-  const value = core.getInput(`permission-${name}`);
-  if (value === "write") {
-    return value;
-  } else if (value) {
-    core.error(`invalid permission value for ${name}: ${value}`);
-  }
-  return undefined;
-}
-
-// getReadWritePermission returns "read" or "write" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
-function getReadWritePermission(name: string): "read" | "write" | undefined {
-  const value = core.getInput(`permission-${name}`);
-  if (value === "read" || value === "write") {
-    return value;
-  } else if (value) {
-    core.error(`invalid permission value for ${name}: ${value}`);
-  }
-  return undefined;
-}
-
-// getReadWriteAdminPermission returns "read", "write" or "admin" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
-function getReadWriteAdminPermission(name: string): "read" | "write" | "admin" | undefined {
-  const value = core.getInput(`permission-${name}`);
-  if (value === "read" || value === "write" || value === "admin") {
-    return value;
-  } else if (value) {
-    core.error(`invalid permission value for ${name}: ${value}`);
-  }
-  return undefined;
-}
-
 async function run() {
+  let errorCount: number = 0;
+
+  // getReadOnlyPermission returns "read" if the input is "read", otherwise returns undefined and logs an error if the input is not empty or "read".
+  const getReadOnlyPermission = (name: string): "read" | undefined => {
+    const value = core.getInput(`permission-${name}`);
+    if (value === "read") {
+      return value;
+    } else if (value) {
+      core.error(`invalid permission value for ${name}: ${value}`);
+      errorCount++;
+    }
+    return undefined;
+  };
+
+  // getWriteOnlyPermission returns "write" if the input is "write", otherwise returns undefined and logs an error if the input is not empty or "write".
+  const getWriteOnlyPermission = (name: string): "write" | undefined => {
+    const value = core.getInput(`permission-${name}`);
+    if (value === "write") {
+      return value;
+    } else if (value) {
+      core.error(`invalid permission value for ${name}: ${value}`);
+      errorCount++;
+    }
+    return undefined;
+  };
+
+  // getReadWritePermission returns "read" or "write" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
+  const getReadWritePermission = (name: string): "read" | "write" | undefined => {
+    const value = core.getInput(`permission-${name}`);
+    if (value === "read" || value === "write") {
+      return value;
+    } else if (value) {
+      core.error(`invalid permission value for ${name}: ${value}`);
+      errorCount++;
+    }
+    return undefined;
+  };
+
+  // getReadWriteAdminPermission returns "read", "write" or "admin" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
+  const getReadWriteAdminPermission = (name: string): "read" | "write" | "admin" | undefined => {
+    const value = core.getInput(`permission-${name}`);
+    if (value === "read" || value === "write" || value === "admin") {
+      return value;
+    } else if (value) {
+      core.error(`invalid permission value for ${name}: ${value}`);
+      errorCount++;
+    }
+    return undefined;
+  };
+
   const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
   const defaultAppID = "136245";
   const audiencePrefix = "https://github-app.shogo82148.com/";
@@ -247,6 +253,10 @@ async function run() {
       vulnerability_alerts: getReadWritePermission("vulnerability-alerts"),
       workflows: getWriteOnlyPermission("workflows"),
     };
+    if (errorCount > 0) {
+      core.setFailed(`invalid permissions: ${errorCount} error(s) found`);
+      return;
+    }
 
     await assumeRole({
       providerEndpoint,
