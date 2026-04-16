@@ -28960,6 +28960,7 @@ async function assumeRole(params) {
     const payload = {
         api_url: GITHUB_API_URL,
         repositories: params.repositories,
+        permissions: params.permissions,
     };
     const headers = {};
     if (!isIdTokenAvailable()) {
@@ -28996,6 +28997,50 @@ function parseRepositories(s) {
     }
     return s.split(/\s+/);
 }
+// getReadOnlyPermission returns "read" if the input is "read", otherwise returns undefined and logs an error if the input is not empty or "read".
+function getReadOnlyPermission(name) {
+    const value = getInput(`permission-${name}`);
+    if (value === "read") {
+        return value;
+    }
+    else if (value) {
+        error(`invalid permission value for ${name}: ${value}`);
+    }
+    return undefined;
+}
+// getWriteOnlyPermission returns "write" if the input is "write", otherwise returns undefined and logs an error if the input is not empty or "write".
+function getWriteOnlyPermission(name) {
+    const value = getInput(`permission-${name}`);
+    if (value === "write") {
+        return value;
+    }
+    else if (value) {
+        error(`invalid permission value for ${name}: ${value}`);
+    }
+    return undefined;
+}
+// getReadWritePermission returns "read" or "write" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
+function getReadWritePermission(name) {
+    const value = getInput(`permission-${name}`);
+    if (value === "read" || value === "write") {
+        return value;
+    }
+    else if (value) {
+        error(`invalid permission value for ${name}: ${value}`);
+    }
+    return undefined;
+}
+// getReadWriteAdminPermission returns "read", "write" or "admin" if the input is valid, otherwise returns undefined and logs an error if the input is not empty.
+function getReadWriteAdminPermission(name) {
+    const value = getInput(`permission-${name}`);
+    if (value === "read" || value === "write" || value === "admin") {
+        return value;
+    }
+    else if (value) {
+        error(`invalid permission value for ${name}: ${value}`);
+    }
+    return undefined;
+}
 async function run() {
     const defaultProviderEndpoint = "https://aznfkxv2k8.execute-api.us-east-1.amazonaws.com/";
     const defaultAppID = "136245";
@@ -29005,10 +29050,67 @@ async function run() {
         const appID = getInput("app-id") || defaultAppID;
         const audience = audiencePrefix + appID;
         const repositories = parseRepositories(getInput("repositories"));
+        const permissions = {
+            actions: getReadWritePermission("actions"),
+            administration: getReadWritePermission("administration"),
+            artifact_metadata: getReadWritePermission("artifact-metadata"),
+            attestations: getReadWritePermission("attestations"),
+            checks: getReadWritePermission("checks"),
+            codespaces: getReadWritePermission("codespaces"),
+            contents: getReadWritePermission("contents"),
+            custom_properties_for_organizations: getReadWritePermission("custom-properties-for-organizations"),
+            dependabot_secrets: getReadWritePermission("dependabot-secrets"),
+            deployments: getReadWritePermission("deployments"),
+            discussions: getReadWritePermission("discussions"),
+            email_addresses: getReadWritePermission("email-addresses"),
+            enterprise_custom_properties_for_organizations: getReadWriteAdminPermission("enterprise-custom-properties-for-organizations"),
+            environments: getReadWritePermission("environments"),
+            followers: getReadWritePermission("followers"),
+            git_ssh_keys: getReadWritePermission("git-ssh-keys"),
+            gpg_keys: getReadWritePermission("gpg-keys"),
+            interaction_limits: getReadWritePermission("interaction-limits"),
+            issues: getReadWritePermission("issues"),
+            members: getReadWritePermission("members"),
+            merge_queues: getReadWritePermission("merge-queues"),
+            metadata: getReadWritePermission("metadata"),
+            organization_administration: getReadWritePermission("organization-administration"),
+            organization_announcement_banners: getReadWritePermission("organization-announcement-banners"),
+            organization_copilot_seat_management: getWriteOnlyPermission("organization-copilot-seat-management"),
+            organization_custom_org_roles: getReadWritePermission("organization-custom-org-roles"),
+            organization_custom_properties: getReadWriteAdminPermission("organization-custom-properties"),
+            organization_custom_roles: getReadWritePermission("organization-custom-roles"),
+            organization_events: getReadOnlyPermission("organization-events"),
+            organization_hooks: getReadWritePermission("organization-hooks"),
+            organization_packages: getReadWritePermission("organization-packages"),
+            organization_personal_access_token_requests: getReadWritePermission("organization-personal-access-token-requests"),
+            organization_personal_access_tokens: getReadWritePermission("organization-personal-access-tokens"),
+            organization_plan: getReadOnlyPermission("organization-plan"),
+            organization_projects: getReadWriteAdminPermission("organization-projects"),
+            organization_secrets: getReadWritePermission("organization-secrets"),
+            organization_self_hosted_runners: getReadWritePermission("organization-self-hosted-runners"),
+            organization_user_blocking: getReadWritePermission("organization-user-blocking"),
+            packages: getReadWritePermission("packages"),
+            pages: getReadWritePermission("pages"),
+            profile: getWriteOnlyPermission("profile"),
+            pull_requests: getReadWritePermission("pull-requests"),
+            repository_custom_properties: getReadWritePermission("repository-custom-properties"),
+            repository_hooks: getReadWritePermission("repository-hooks"),
+            repository_projects: getReadWriteAdminPermission("repository-projects"),
+            secret_scanning_alerts: getReadWritePermission("secret-scanning-alerts"),
+            secrets: getReadWritePermission("secrets"),
+            security_events: getReadWritePermission("security-events"),
+            single_file: getReadWritePermission("single-file"),
+            starring: getReadWritePermission("starring"),
+            statuses: getReadWritePermission("statuses"),
+            team_discussions: getReadWritePermission("team-discussions"),
+            vulnerability_alerts: getReadWritePermission("vulnerability-alerts"),
+            workflows: getWriteOnlyPermission("workflows"),
+        };
         await assumeRole({
             providerEndpoint,
             audience,
             repositories,
+            permissions,
         });
     }
     catch (error) {
