@@ -12,7 +12,7 @@ require (
 	github.com/shogo82148/go-http-logger v1.3.0
 	github.com/shogo82148/goat v0.1.1
 	github.com/shogo82148/ridgenative v1.5.1
-	golang.org/x/sync v0.21.0
+	golang.org/x/sync v0.22.0
 )
 
 require (
