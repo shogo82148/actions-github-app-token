@@ -73,8 +73,25 @@ func (c *Client) ParseIDToken(ctx context.Context, idToken string) (*ActionsIDTo
 	}
 	claims.Claims = token.Claims
 
-	if !strings.HasPrefix(claims.Claims.Subject, fmt.Sprintf("repo:%s:", claims.Repository)) {
-		return nil, errors.New("github: failed to parse id token: invalid subject")
+	if err := validateSubject(&claims); err != nil {
+		return nil, fmt.Errorf("github: failed to parse id token: %w", err)
 	}
 	return &claims, nil
+}
+
+func validateSubject(claims *ActionsIDToken) error {
+	// old style subject validation: `repo:octocat/my-repo:ref:refs/heads/main`
+	if strings.HasPrefix(claims.Claims.Subject, fmt.Sprintf("repo:%s:", claims.Repository)) {
+		return nil
+	}
+
+	// immutable style subject validation: `repo:octocat@123456/my-repo@654321:ref:refs/heads/main`
+	if owner, repo, ok := strings.Cut(claims.Repository, "/"); ok {
+		prefix := fmt.Sprintf("repo:%s@%s/%s@%s:", owner, claims.RepositoryOwnerID, repo, claims.RepositoryID)
+		if strings.HasPrefix(claims.Claims.Subject, prefix) {
+			return nil
+		}
+	}
+	return errors.New("github: failed to parse id token: invalid subject")
+
 }
