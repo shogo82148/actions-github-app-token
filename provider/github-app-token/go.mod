@@ -2,6 +2,8 @@ module github.com/shogo82148/actions-github-app-token/provider/github-app-token
 
 go 1.27.0
 
+toolchain go1.27.3
+
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
@@ -30,6 +32,6 @@ require (
 	github.com/aws/smithy-go v1.28.5 // indirect
 	github.com/shogo82148/forwarded-header v0.1.0 // indirect
 	github.com/shogo82148/memoize v0.1.0 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
+	golang.org/x/crypto v0.56.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 )
