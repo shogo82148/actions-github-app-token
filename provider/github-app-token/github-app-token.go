@@ -1,6 +1,7 @@
 package githubapptoken
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -18,6 +19,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/parser"
 	"github.com/shogo82148/actions-github-app-token/provider/github-app-token/github"
 	"github.com/shogo82148/aws-xray-yasdk-go/xray"
 	"github.com/shogo82148/aws-xray-yasdk-go/xrayhttp"
@@ -210,6 +213,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(data, &payload); err != nil {
 		h.handleError(ctx, w, r, &validationError{
 			message: fmt.Sprintf("failed to unmarshal the request body: %v", err),
+		})
+		return
+	}
+	if payload == nil {
+		// the request body is JSON null.
+		h.handleError(ctx, w, r, &validationError{
+			message: "the request body must be a JSON object",
 		})
 		return
 	}
@@ -451,6 +461,9 @@ func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResp
 	if err != nil {
 		return 0, err
 	}
+	if err := checkAliasExpansion(content); err != nil {
+		return 0, err
+	}
 	var config struct {
 		Repositories []string `yaml:"repositories"`
 	}
@@ -462,6 +475,146 @@ func (h *Handler) checkConfig(ctx context.Context, info *github.GetReposInfoResp
 		return info.ID, nil
 	}
 	return 0, errors.New("permission denied")
+}
+
+// maxConfigAliasExpansion is the upper limit of how much the aliases in a config file may expand.
+// The unit is the number of nodes plus the length of their tokens that resolving the aliases produces.
+// A real config refers to its list of repositories only a few times, so it never comes close to the limit,
+// and decoding an expansion of this size takes well under 100ms and 30MiB.
+const maxConfigAliasExpansion = 1 << 20
+
+var errConfigAliasExpansion = errors.New("aliases in the config file expand too much")
+
+// checkAliasExpansion rejects YAML whose aliases expand to a huge value, such as "billion laughs".
+// goccy/go-yaml resolves an alias by decoding its anchor again without caching the result,
+// so nested aliases expand exponentially.
+func checkAliasExpansion(content []byte) error {
+	if bytes.IndexByte(content, '*') < 0 {
+		// there is no alias.
+		return nil
+	}
+
+	// use the same parser as yaml.Unmarshal.
+	file, err := parser.ParseBytes(content, 0)
+	if err != nil {
+		return err
+	}
+
+	c := &aliasCollector{
+		anchors: map[string][]*ast.AnchorNode{},
+	}
+	for _, doc := range file.Docs {
+		ast.Walk(c, doc)
+	}
+
+	e := &aliasExpansion{
+		anchors:     c.anchors,
+		anchorSizes: map[*ast.AnchorNode]int{},
+		nameSizes:   map[string]int{},
+	}
+	total := 0
+	for _, alias := range c.aliases {
+		total += e.aliasSize(alias)
+		if total > maxConfigAliasExpansion {
+			return errConfigAliasExpansion
+		}
+	}
+	return nil
+}
+
+// aliasCollector collects all anchors and aliases in the YAML documents.
+type aliasCollector struct {
+	anchors map[string][]*ast.AnchorNode
+	aliases []*ast.AliasNode
+}
+
+func (c *aliasCollector) Visit(node ast.Node) ast.Visitor {
+	switch n := node.(type) {
+	case *ast.AnchorNode:
+		name := n.Name.GetToken().Value
+		c.anchors[name] = append(c.anchors[name], n)
+	case *ast.AliasNode:
+		c.aliases = append(c.aliases, n)
+	}
+	return c
+}
+
+// aliasExpansion calculates the sizes of the values that aliases expand to.
+// The sizes are capped at maxConfigAliasExpansion+1.
+type aliasExpansion struct {
+	anchors     map[string][]*ast.AnchorNode
+	anchorSizes map[*ast.AnchorNode]int
+	nameSizes   map[string]int
+}
+
+// sizeInProgress marks the size being calculated, in order to detect circular references.
+const sizeInProgress = -1
+
+// aliasSize returns the size of the value that the alias expands to.
+func (e *aliasExpansion) aliasSize(alias *ast.AliasNode) int {
+	// the decoder looks up the anchor by both the token value and the string representation of the alias name.
+	return max(e.nameSize(alias.Value.GetToken().Value), e.nameSize(alias.Value.String()))
+}
+
+// nameSize returns the largest size of the anchors with the name.
+// An anchor name can be defined more than once, and the decoder may resolve an alias to any of them.
+func (e *aliasExpansion) nameSize(name string) int {
+	if size, ok := e.nameSizes[name]; ok {
+		if size == sizeInProgress {
+			// circular reference: it expands infinitely.
+			return maxConfigAliasExpansion + 1
+		}
+		return size
+	}
+	e.nameSizes[name] = sizeInProgress
+	size := 0
+	for _, anchor := range e.anchors[name] {
+		size = max(size, e.anchorSize(anchor))
+	}
+	e.nameSizes[name] = size
+	return size
+}
+
+// anchorSize returns the size of the anchored value.
+func (e *aliasExpansion) anchorSize(anchor *ast.AnchorNode) int {
+	if size, ok := e.anchorSizes[anchor]; ok {
+		if size == sizeInProgress {
+			// circular reference: it expands infinitely.
+			return maxConfigAliasExpansion + 1
+		}
+		return size
+	}
+	e.anchorSizes[anchor] = sizeInProgress
+	v := &sizeVisitor{e: e}
+	ast.Walk(v, anchor.Value)
+	size := min(v.size, maxConfigAliasExpansion+1)
+	e.anchorSizes[anchor] = size
+	return size
+}
+
+// sizeVisitor calculates the size of a node with its aliases expanded.
+type sizeVisitor struct {
+	e    *aliasExpansion
+	size int
+}
+
+func (v *sizeVisitor) Visit(node ast.Node) ast.Visitor {
+	if node == nil || v.size > maxConfigAliasExpansion {
+		return nil
+	}
+	switch n := node.(type) {
+	case *ast.AnchorNode:
+		v.size += v.e.anchorSize(n)
+		return nil
+	case *ast.AliasNode:
+		v.size += v.e.aliasSize(n)
+		return nil
+	}
+	v.size++
+	if tk := node.GetToken(); tk != nil {
+		v.size += len(tk.Value)
+	}
+	return v
 }
 
 func (h *Handler) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
