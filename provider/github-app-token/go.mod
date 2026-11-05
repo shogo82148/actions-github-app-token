@@ -13,7 +13,7 @@ require (
 	github.com/shogo82148/aws-xray-yasdk-go v1.8.1
 	github.com/shogo82148/go-http-logger v1.3.0
 	github.com/shogo82148/goat v0.1.1
-	github.com/shogo82148/ridgenative v1.5.2
+	github.com/shogo82148/ridgenative v1.5.3
 	golang.org/x/sync v0.24.0
 )
 
